@@ -63,19 +63,33 @@
   async function mountCheckout({document, fetch, navigate}) {
     const button = document.getElementById('checkout-button');
     const status = document.getElementById('checkout-status');
-    if (!button || !status) return;
+    const availability = document.getElementById('checkout-availability');
+    const hasCheckoutControls = Boolean(button && status);
+    if (!hasCheckoutControls && !availability) return;
 
     function render(presentation) {
-      button.disabled = presentation.disabled;
-      button.textContent = presentation.buttonLabel;
-      status.textContent = presentation.message;
+      if (hasCheckoutControls) {
+        button.disabled = presentation.disabled;
+        button.textContent = presentation.buttonLabel;
+        status.textContent = presentation.message;
+      }
+      if (availability) {
+        availability.textContent = {
+          ready: 'The $19 digital gift kit is available through Gumroad.',
+          closed: 'Purchases are not open. You have not been charged.',
+          error: 'Checkout availability could not be checked. You have not been charged.'
+        }[presentation.state];
+      }
     }
 
     let state = 'checking';
-    button.disabled = true;
-    button.textContent = 'Checking checkout…';
-    status.textContent = 'Checking whether orders are open.';
-    button.addEventListener('click', async () => {
+    if (hasCheckoutControls) {
+      button.disabled = true;
+      button.textContent = 'Checking checkout…';
+      status.textContent = 'Checking whether orders are open.';
+    }
+    if (availability) availability.textContent = 'Checking current gift-kit checkout availability…';
+    if (hasCheckoutControls) button.addEventListener('click', async () => {
       if (state !== 'ready') return;
       state = 'opening';
       button.disabled = true;
@@ -156,17 +170,23 @@
     }
   }
 
-  const exported = {
-    statusPresentation, approvedCheckoutUrl, mountCheckout,
-    titleIndexForSlug, titleSlugForIndex, mountTitleSelection
-  };
-  if (typeof module !== 'undefined' && module.exports) module.exports = exported;
-  if (typeof document !== 'undefined') {
-    mountTitleSelection({document, search: window.location.search, Event: window.Event});
-    mountCheckout({
-      document,
-      fetch: window.fetch.bind(window),
-      navigate: url => window.location.assign(url)
+  function mountBrowser(browsingContext) {
+    mountTitleSelection({
+      document: browsingContext.document,
+      search: browsingContext.location.search,
+      Event: browsingContext.Event
+    });
+    return mountCheckout({
+      document: browsingContext.document,
+      fetch: browsingContext.fetch.bind(browsingContext),
+      navigate: url => browsingContext.top.location.assign(url)
     });
   }
+
+  const exported = {
+    statusPresentation, approvedCheckoutUrl, mountCheckout,
+    titleIndexForSlug, titleSlugForIndex, mountTitleSelection, mountBrowser
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = exported;
+  if (typeof document !== 'undefined') mountBrowser(window);
 })();

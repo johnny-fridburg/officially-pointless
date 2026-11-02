@@ -1,6 +1,8 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const {readFileSync} = require('node:fs');
+const {join} = require('node:path');
 
 let checkout = {};
 try {
@@ -248,4 +250,94 @@ test('title preview preselects its title and carries only that title to the kit 
   select.value = '2';
   select.listeners.change();
   assert.equal(kit.href, '/gift-kit/?title=director-of-unnecessary-meetings');
+});
+
+test('embedded title checkout opens the validated destination in the top-level context', async () => {
+  const page = fakePage();
+  const topNavigations = [];
+  const frameNavigations = [];
+  const frame = {
+    document: page.document,
+    location: {
+      search: '',
+      assign: url => frameNavigations.push(url)
+    },
+    top: {location: {assign: url => topNavigations.push(url)}},
+    Event,
+    fetch: async url => ({
+      ok: true,
+      json: async () => url.endsWith('/status') ? readyStatus : validCheckout
+    })
+  };
+  await checkout.mountBrowser(frame);
+  await page.button.click();
+  assert.deepEqual(topNavigations, [validCheckout.checkoutUrl]);
+  assert.deepEqual(frameNavigations, []);
+});
+
+test('blocked top-level navigation fails closed without falling back to the frame', async () => {
+  const page = fakePage();
+  const frame = {
+    document: page.document,
+    location: {
+      search: '',
+      assign: () => assert.fail('checkout navigated the frame')
+    },
+    top: {location: {assign: () => { throw new Error('blocked top navigation'); }}},
+    Event,
+    fetch: async url => ({
+      ok: true,
+      json: async () => url.endsWith('/status') ? readyStatus : validCheckout
+    })
+  };
+  await checkout.mountBrowser(frame);
+  await page.button.click();
+  assert.equal(page.button.disabled, true);
+  assert.match(page.status.textContent, /not been charged/);
+});
+
+test('sales page reports enabled checkout from the server status', async () => {
+  const availability = {textContent: ''};
+  const document = {
+    getElementById: id => id === 'checkout-availability' ? availability : null
+  };
+  await checkout.mountCheckout({
+    document,
+    fetch: async () => ({ok: true, json: async () => readyStatus}),
+    navigate: () => assert.fail('status-only page navigated')
+  });
+  assert.match(availability.textContent, /\$19/);
+  assert.match(availability.textContent, /available through Gumroad/);
+});
+
+test('sales page reports closed and unavailable status without claiming a sale', async () => {
+  for (const [fetch, expected] of [
+    [async () => ({ok: true, json: async () => ({...readyStatus, checkoutEnabled: false})}), /Purchases are not open/],
+    [async () => { throw new Error('offline'); }, /could not be checked/]
+  ]) {
+    const availability = {textContent: ''};
+    await checkout.mountCheckout({
+      document: {getElementById: id => id === 'checkout-availability' ? availability : null},
+      fetch,
+      navigate: () => assert.fail('status-only page navigated')
+    });
+    assert.match(availability.textContent, expected);
+  }
+});
+
+test('generated public pages have no unconditional closed-checkout claims', () => {
+  const pages = [
+    'index.html', 'gift-kit/index.html', 'ministry-title-gift/index.html',
+    'contact/index.html', 'privacy/index.html', 'terms/index.html',
+    'sales-status/index.html'
+  ];
+  for (const page of pages) {
+    const html = readFileSync(join(__dirname, '..', 'site', page), 'utf8');
+    assert.doesNotMatch(html,
+      /orders are not open|checkout is closed|purchases are not open|there is no live checkout|no purchase can currently be made|before any commercial checkout opens|after seller setup and the delivery test|future paid service/i,
+      page);
+  }
+  const sales = readFileSync(join(__dirname, '..', 'site/sales-status/index.html'), 'utf8');
+  assert.match(sales, /id="checkout-availability"/);
+  assert.match(sales, /<script src="\/assets\/checkout\.js" defer><\/script>/);
 });
