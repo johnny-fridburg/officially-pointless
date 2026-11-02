@@ -17,8 +17,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
-      - name: Verify API and public artifact guard
-        run: node --test api/commerce.test.js scripts/verify-public-artifact.test.js
+      - name: Verify API, checkout UI and public artifact guard
+        run: node --test
       - name: Validate public site artifact
         run: node scripts/verify-public-artifact.js site
       - name: Deploy to sponsored Azure subscription
