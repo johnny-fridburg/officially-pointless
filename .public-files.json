@@ -1,0 +1,40 @@
+{
+  "files": [
+    ".githooks/pre-commit",
+    ".githooks/pre-push",
+    ".github/workflows/azure.yml",
+    ".gitignore",
+    ".public-files.json",
+    "README.md",
+    "api/catalog.js",
+    "api/checkout/function.json",
+    "api/checkout/index.js",
+    "api/commerce.test.js",
+    "api/host.json",
+    "api/package.json",
+    "api/status/function.json",
+    "api/status/index.js",
+    "scripts/verify-public-artifact.js",
+    "scripts/verify-public-artifact.test.js",
+    "scripts/verify-public-repository.js",
+    "scripts/verify-public-repository.test.js",
+    "site/assets/checkout.js",
+    "site/assets/gift-kit-cover.png",
+    "site/contact/index.html",
+    "site/gift-kit/index.html",
+    "site/index.html",
+    "site/ministry-title-gift/certificate.svg",
+    "site/ministry-title-gift/index.html",
+    "site/pdf/ministry-unopened-tabs-certificate.pdf",
+    "site/privacy/index.html",
+    "site/sales-status/index.html",
+    "site/staticwebapp.config.json",
+    "site/terms/index.html",
+    "test/checkout-ui.test.js"
+  ],
+  "assetSha256": {
+    "site/assets/gift-kit-cover.png": "b99b3f985d325794545e81bf3488917df6ef97142f3058d87bf0761991b67fdd",
+    "site/pdf/ministry-unopened-tabs-certificate.pdf": "db4036425f59693de291da6cf9e5ea15d024309e7a6843ec5aaaf15f8e98ec58",
+    "site/ministry-title-gift/certificate.svg": "732b448e9d02dd086f6e274fdbade2541350666c78bfbf6615fbf4f26c143ec0"
+  }
+}
