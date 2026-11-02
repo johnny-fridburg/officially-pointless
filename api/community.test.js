@@ -18,7 +18,7 @@ test('all seven departments publish real records readable by a second handler',a
 test('Google signature, audience, issuer and expiration are verified before publishing',async()=>{
  const {handler}=setup();const body=submission();
  for(const token of ['not-a-token',credential('user',{aud:'wrong'}),credential('user',{iss:'https://evil.invalid'}),credential('user',{exp:1}),credential('user',{iat:Math.floor(Date.now()/1000)+3600}),credential('user').slice(0,-8)+'invalid']){
-  assert.equal((await call(handler,'POST',body,{}, {origin:'https://officiallypointless.com',authorization:'Bearer '+token})).status,401);
+  assert.equal((await call(handler,'POST',body,{}, {origin:'https://officiallypointless.com','x-pointless-authorization':'Bearer '+token})).status,401);
  }
  assert.equal((await call(handler,'POST',body)).status,401);assert.equal((await call(handler)).body.departments['last-word'].length,0);
 });
@@ -34,7 +34,7 @@ test('only the Google owner can remove a record and prior word returns',async()=
  assert.equal((await call(handler,'DELETE',{id:b.body.record.id},{},ownerA)).status,403);assert.equal((await call(handler,'DELETE',{id:b.body.record.id},{},ownerB)).status,200);assert.equal((await call(handler)).body.lastWord.id,a.body.record.id);assert.equal((await call(handler,'GET',undefined,{id:b.body.record.id})).status,404);
 });
 test('cross-origin and originless mutations fail; browsing remains public',async()=>{
- const {handler}=setup();const body=submission();assert.equal((await call(handler,'POST',body,{}, {...auth(),origin:'https://evil.invalid'})).status,403);assert.equal((await call(handler,'POST',body,{}, {authorization:auth().authorization})).status,403);assert.equal((await call(handler,'GET',undefined,{},{})).status,200);
+ const {handler}=setup();const body=submission();assert.equal((await call(handler,'POST',body,{}, {...auth(),origin:'https://evil.invalid'})).status,403);assert.equal((await call(handler,'POST',body,{}, {'x-pointless-authorization':auth()['x-pointless-authorization']})).status,403);assert.equal((await call(handler,'GET',undefined,{},{})).status,200);
 });
 test('blank names, unknown fields, controls and invalid images fail without mutation',async()=>{
  const {handler}=setup();for(const extra of [{name:' '},{extra:'surprise'},{text:'bad\u0000text'},{photo:'data:image/png;base64,'+'A'.repeat(50000)},{photo:'data:image/svg+xml,<svg/>'},{theme:'javascript:evil'}])assert.equal((await call(handler,'POST',submission(extra.photo?'museum':'make-it-worse',extra),{},auth())).status,400);
@@ -47,7 +47,7 @@ test('missing or failed durable storage returns closed generic errors',async()=>
  const missing=createCommunityHandler({store:null});const response=await call(missing);assert.equal(response.status,503);assert.equal(response.body.error,'community_unavailable');const broken=createCommunityHandler({store:{read:async()=>{throw Error('secret SAS URL');}}});const failed=await call(broken);assert.equal(failed.status,503);assert(!JSON.stringify(failed).includes('secret SAS'));
 });
 test('operator can remove reported entries using a server-only token',async()=>{
- const {store,handler}=setup();const result=await call(handler,'POST',submission(),{},auth());const admin='operator-secret-'.repeat(3);const operator=createCommunityHandler({store,adminToken:admin});assert.equal((await call(operator,'DELETE',{id:result.body.record.id},{},{origin:'https://officiallypointless.com',authorization:'Bearer '+admin})).status,200);
+ const {store,handler}=setup();const result=await call(handler,'POST',submission(),{},auth());const admin='operator-secret-'.repeat(3);const operator=createCommunityHandler({store,adminToken:admin});assert.equal((await call(operator,'DELETE',{id:result.body.record.id},{},{origin:'https://officiallypointless.com','x-pointless-authorization':'Bearer '+admin})).status,200);
 });
 test('only the verified owner sees a removal control on public reads',async()=>{
  const {handler}=setup(),owner=auth();const result=await call(handler,'POST',submission(),{},owner);
@@ -72,4 +72,21 @@ test('capacity limit preserves existing permanent links rather than evicting the
 test('Google signing-key rotation refreshes a still-cached key set once',async()=>{
  let fetched=0;const verify=createGoogleVerifier({clientId,fetchKeys:async()=>({keys:++fetched===1?[jwk]:[{...jwk,kid:'rotated-key'}],maxAge:3600})});
  assert.equal((await verify(credential('owner'))).sub,'owner');assert.equal((await verify(credential('owner',{},'rotated-key'))).sub,'owner');assert.equal(fetched,2);
+});
+
+test('dedicated Google credential survives platform Authorization replacement',async()=>{
+ const {handler}=setup();const headers={origin:'https://officiallypointless.com',authorization:'Bearer platform-internal-token','X-Pointless-Authorization':'Bearer '+credential('transport-owner')};
+ const created=await call(handler,'POST',submission(),{},headers);assert.equal(created.status,201);
+ const view=await call(handler,'GET',undefined,{id:created.body.record.id},headers);assert.equal(view.body.record.canRemove,true);
+ assert.equal((await call(handler,'DELETE',{id:created.body.record.id},{},headers)).status,200);
+});
+test('dedicated operator credential survives platform Authorization replacement',async()=>{
+ const {store,handler}=setup();const created=await call(handler,'POST',submission(),{},auth());const admin='operator-test-token-'.repeat(3);const operator=createCommunityHandler({store,adminToken:admin});
+ const result=await call(operator,'DELETE',{id:created.body.record.id},{},{origin:'https://officiallypointless.com',authorization:'Bearer platform-internal-token','x-pointless-authorization':'Bearer '+admin});assert.equal(result.status,200);
+});
+test('reserved Authorization cannot replace missing or invalid app credentials',async()=>{
+ const {handler}=setup();const body=submission(),reserved={origin:'https://officiallypointless.com',authorization:'Bearer '+credential('reserved-owner')};
+ assert.equal((await call(handler,'POST',body,{},reserved)).status,401);
+ assert.equal((await call(handler,'POST',body,{}, {...reserved,'x-pointless-authorization':'Bearer invalid'})).status,401);
+ assert.equal((await call(handler)).body.counts['last-word'],0);
 });

@@ -51,10 +51,12 @@ function createCommunityHandler({store,verifyIdentity,clientId=null,adminToken=n
   const reqHeaders=Object.fromEntries(Object.entries(req.headers||{}).map(([k,v])=>[k.toLowerCase(),v]));
   if(req.method!=='GET'&&!ORIGINS.has(reqHeaders.origin)){respond(403,{error:'forbidden_origin'});return;}
   if(!store){respond(503,{error:'community_unavailable'});return;}
+  // Azure's managed API gateway replaces Authorization; use the app-owned transport.
+  const appAuthorization=reqHeaders['x-pointless-authorization'];
   let owner=null,operator=false;
-  if(req.method==='GET'&&reqHeaders.authorization&&verifyIdentity){try{const identity=await verifyIdentity(reqHeaders.authorization.match(/^Bearer (\S+)$/)?.[1]);owner=hash('google:'+identity.sub);}catch{ /* Browsing stays available after a sign-in expires. */ }}
+  if(req.method==='GET'&&appAuthorization&&verifyIdentity){try{const identity=await verifyIdentity(appAuthorization.match(/^Bearer (\S+)$/)?.[1]);owner=hash('google:'+identity.sub);}catch{ /* Browsing stays available after a sign-in expires. */ }}
   if(req.method!=='GET'){
-   const credential=reqHeaders.authorization?.match(/^Bearer (\S+)$/)?.[1];operator=req.method==='DELETE'&&adminToken&&equalSecret(credential,adminToken);
+   const credential=appAuthorization?.match(/^Bearer (\S+)$/)?.[1];operator=req.method==='DELETE'&&adminToken&&equalSecret(credential,adminToken);
    if(!operator){try{if(!verifyIdentity)throw new IdentityUnavailable();const identity=await verifyIdentity(credential);owner=hash('google:'+identity.sub);}catch(error){respond(error instanceof IdentityUnavailable?503:401,{error:error instanceof IdentityUnavailable?'sign_in_unavailable':'sign_in_required'});return;}}
   }
   let entry;if(req.method==='POST'){try{entry=validateSubmission(req.body);}catch{respond(400,{error:'invalid_submission'});return;}}

@@ -17,5 +17,5 @@ async function call(handler,method='GET',body,query={},headers={origin:'https://
  const context={};await handler(context,{method,body,query,headers});return context.res;
 }
 const submission=(feature='last-word',extra={})=>({feature,name:'Alex',text:'I was right about the snacks.',requestId:randomUUID(),...extra});
-const auth=(sub=randomUUID())=>({origin:'https://officiallypointless.com',authorization:'Bearer '+credential(sub)});
+const auth=(sub=randomUUID())=>({origin:'https://officiallypointless.com','x-pointless-authorization':'Bearer '+credential(sub)});
 module.exports={TestStore,call,submission,auth,credential,clientId,jwk};
