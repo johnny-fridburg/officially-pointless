@@ -1,6 +1,6 @@
 {
   "globalHeaders": {
-    "Content-Security-Policy": "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client 'sha256-Cu+gOLSiVF7nAGjCK9TUgy39U4UKRs6l6VO/nOnlvJM=' 'sha256-Ldpik9x0E2PpKZEGrF5X1K8jSgjwk1wOysFz8Ci+jbM=' 'sha256-Yu2ZyYGXI3xrv+MUBcdoDW1rKx5LR7Z+zrnh2ekT7u0=' 'sha256-j5DzqSxHbr29ZJNU3uuI32AsM4Kv0rTyagbLs+2VT5E='; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: blob:; connect-src 'self' https://accounts.google.com/gsi/; frame-src 'self' https://accounts.google.com/gsi/; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client 'sha256-1D3IbF92yTFj7ntnKmrueuN7Rr0kSTkePkFMiGIPuAI=' 'sha256-JqrQk57V0Acg2zxSDk1u/QqxiLyQX747nQT55yiVnyg=' 'sha256-Ldpik9x0E2PpKZEGrF5X1K8jSgjwk1wOysFz8Ci+jbM=' 'sha256-c9E7Q5giJ+plbOVr21hdCjERvUs1+KzdnFk7ksCs/Hc=' 'sha256-nDUDdSfVOuSqa7pKofWtTmzTFE3IyecKeZs9n/DgIFk='; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: blob:; connect-src 'self' https://accounts.google.com/gsi/; frame-src 'self' https://accounts.google.com/gsi/; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
