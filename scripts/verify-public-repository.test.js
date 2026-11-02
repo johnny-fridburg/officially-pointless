@@ -187,6 +187,39 @@ test('rejects an unsafe indexed blob even after the working file is cleaned', (t
   assert.throws(() => api().validateStagedRepository(repo), /README\.md/);
 });
 
+for (const [name, key] of [
+  ['site/staticwebapp.config.json', 'deployment_token'],
+  ['api/package.json', 'azure_static_web_apps_api_token'],
+  ['api/host.json', 'SWA_CLI_DEPLOYMENT_TOKEN'],
+]) {
+  test(`rejects a quoted ${key} value in reviewed JSON`, (t) => {
+    const repo = repository(t);
+    const canary = ['q'.repeat(20), 'r'.repeat(20)].join('');
+    stage(repo, name, JSON.stringify({ [key]: canary }));
+    assert.throws(() => api().validateStagedRepository(repo), (error) => {
+      assert.match(error.message, /credential/i);
+      assert.doesNotMatch(error.message, new RegExp(canary));
+      return true;
+    });
+    const result = run(repo, '--staged');
+    assert.notEqual(result.status, 0);
+    assert.doesNotMatch(result.stderr, new RegExp(canary));
+  });
+}
+
+test('rejects a single-quoted deployment token key in reviewed text', (t) => {
+  const repo = repository(t);
+  const canary = ['q'.repeat(20), 'r'.repeat(20)].join('');
+  stage(repo, 'README.md', `'deployment_token': '${canary}'\n`);
+  assert.throws(() => api().validateStagedRepository(repo), /credential/i);
+});
+
+test('permits a workflow reference to the configured GitHub secret', (t) => {
+  const repo = repository(t);
+  stage(repo, '.github/workflows/azure.yml', 'azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}\n');
+  assert.deepEqual(api().validateStagedRepository(repo), { entries: 1, objects: 1 });
+});
+
 test('rejects a policy file that tries to widen the reviewed paths', (t) => {
   const repo = repository(t);
   stage(repo, '.public-files.json', '{"paths":["private-delivery.zip"]}\n');

@@ -58,7 +58,7 @@ const credentialPatterns = [
   /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/,
   /\bgh[pousr]_[A-Za-z0-9_]{20,}\b/,
   /\bgithub_pat_[A-Za-z0-9_]{20,}\b/,
-  /\b(?:azure_static_web_apps_api_token|deployment[_-]?token)\s*[:=]\s*['"]?[A-Za-z0-9+/_=-]{20,}/i,
+  /\b(?:azure_static_web_apps_api_token|swa_cli_deployment_token|deployment[_-]?token)['"]?\s*[:=]\s*['"]?[A-Za-z0-9+/_=-]{20,}/i,
 ];
 
 function git(repoPath, args) {
