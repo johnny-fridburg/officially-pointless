@@ -46,7 +46,9 @@ test('rejects a hidden file nested under an allowed directory', (t) => {
 
 test('rejects a symlink at an otherwise approved file path', (t) => {
   const site = copiedSite(t);
-  fs.symlinkSync('../index.html', path.join(site, 'assets', 'checkout.js'));
+  const checkoutScript = path.join(site, 'assets', 'checkout.js');
+  fs.rmSync(checkoutScript, { force: true });
+  fs.symlinkSync('../index.html', checkoutScript);
   assert.throws(() => validatePublicArtifact(site), /assets\/checkout\.js/);
 });
 
