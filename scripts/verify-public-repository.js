@@ -19,6 +19,7 @@ const reviewedPaths = [
   'api/commerce.test.js',
   'api/host.json',
   'api/package.json',
+  'api/product.json',
   'api/status/function.json',
   'api/status/index.js',
   'scripts/verify-public-artifact.js',
@@ -270,8 +271,12 @@ module.exports = { validateStagedRepository, validateCommitRepository, validateO
 if (require.main === module) {
   try {
     let result;
-    if (process.argv.length !== 3) throw new Error('Usage: verify-public-repository.js --staged|--head|--push');
-    if (process.argv[2] === '--staged') {
+    if (process.argv.length !== 3) throw new Error('Usage: verify-public-repository.js --staged|--head|--push|--policy');
+    if (process.argv[2] === '--policy') {
+      validateBlob(fs.readFileSync('.public-files.json'), '.public-files.json');
+      console.log('Public policy verified');
+      process.exit(0);
+    } else if (process.argv[2] === '--staged') {
       result = validateStagedRepository(process.cwd());
     } else if (process.argv[2] === '--head') {
       const revision = git(process.cwd(), ['rev-parse', '--verify', 'HEAD^{commit}']).toString('ascii').trim();

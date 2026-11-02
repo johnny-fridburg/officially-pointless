@@ -12,6 +12,7 @@
     "api/commerce.test.js",
     "api/host.json",
     "api/package.json",
+    "api/product.json",
     "api/status/function.json",
     "api/status/index.js",
     "scripts/verify-public-artifact.js",

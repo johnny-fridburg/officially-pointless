@@ -1,11 +1,6 @@
 'use strict';
 
-const catalog = Object.freeze({
-  sku: 'unnecessary-promotions',
-  priceUsd: 19,
-  currency: 'USD',
-  kind: 'digital-download',
-});
+const catalog = Object.freeze(require('./product.json'));
 
 const checkoutUrl = 'https://fridburg.gumroad.com/l/unnecessary-promotions';
 
