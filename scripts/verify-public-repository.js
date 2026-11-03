@@ -38,9 +38,7 @@ const reviewedPaths = [
   'site/contact/index.html',
   'site/gift-kit/index.html',
   'site/index.html',
-  'site/ministry-title-gift/certificate.svg',
   'site/ministry-title-gift/index.html',
-  'site/pdf/ministry-unopened-tabs-certificate.pdf',
   'site/privacy/index.html',
   'site/sales-status/index.html',
   'site/staticwebapp.config.json',
@@ -50,8 +48,6 @@ const reviewedPaths = [
 const allowedPaths = new Set(reviewedPaths);
 const approvedAssetSha256 = {
   'site/assets/gift-kit-cover.png': 'b99b3f985d325794545e81bf3488917df6ef97142f3058d87bf0761991b67fdd',
-  'site/pdf/ministry-unopened-tabs-certificate.pdf': 'db4036425f59693de291da6cf9e5ea15d024309e7a6843ec5aaaf15f8e98ec58',
-  'site/ministry-title-gift/certificate.svg': '732b448e9d02dd086f6e274fdbade2541350666c78bfbf6615fbf4f26c143ec0',
 };
 const shaPattern = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
 const utf8 = new TextDecoder('utf-8', { fatal: true });

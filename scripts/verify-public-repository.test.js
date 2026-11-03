@@ -95,12 +95,10 @@ test('rejects a ZIP blob renamed as the reviewed PNG', (t) => {
   assert.throws(() => api().validateStagedRepository(repo), /site\/assets\/gift-kit-cover\.png/);
 });
 
-test('accepts the three approved static asset objects', (t) => {
+test('accepts the approved sample cover object', (t) => {
   const repo = repository(t);
   stage(repo, 'site/assets/gift-kit-cover.png', fs.readFileSync(path.join(__dirname, '../site/assets/gift-kit-cover.png')));
-  stage(repo, 'site/pdf/ministry-unopened-tabs-certificate.pdf', fs.readFileSync(path.join(__dirname, '../site/pdf/ministry-unopened-tabs-certificate.pdf')));
-  stage(repo, 'site/ministry-title-gift/certificate.svg', fs.readFileSync(path.join(__dirname, '../site/ministry-title-gift/certificate.svg')));
-  assert.deepEqual(api().validateStagedRepository(repo), { entries: 3, objects: 3 });
+  assert.deepEqual(api().validateStagedRepository(repo), { entries: 1, objects: 1 });
 });
 
 test('rejects a structurally valid PNG with new metadata at the reviewed cover path', (t) => {
@@ -110,24 +108,19 @@ test('rejects a structurally valid PNG with new metadata at the reviewed cover p
   assert.throws(() => api().validateStagedRepository(repo), /approved asset|SHA-256/i);
 });
 
-test('rejects a valid PDF with a new comment at the reviewed sample path', (t) => {
-  const repo = repository(t);
-  const original = fs.readFileSync(path.join(__dirname, '../site/pdf/ministry-unopened-tabs-certificate.pdf'), 'latin1');
-  stage(repo, 'site/pdf/ministry-unopened-tabs-certificate.pdf', Buffer.from(original.replace('%%EOF', '% fixture comment\n%%EOF'), 'latin1'));
-  assert.throws(() => api().validateStagedRepository(repo), /approved asset|SHA-256/i);
-});
-
-test('rejects a valid SVG with a new comment at the reviewed certificate path', (t) => {
-  const repo = repository(t);
-  const original = fs.readFileSync(path.join(__dirname, '../site/ministry-title-gift/certificate.svg'), 'utf8');
-  stage(repo, 'site/ministry-title-gift/certificate.svg', original.replace('</svg>', '<!-- fixture comment --></svg>'));
-  assert.throws(() => api().validateStagedRepository(repo), /approved asset|SHA-256/i);
-});
+for (const [name, content] of [
+  ['site/pdf/ministry-unopened-tabs-certificate.pdf', '%PDF-1.4\n%%EOF\n'],
+  ['site/ministry-title-gift/certificate.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>'],
+]) {
+  test(`rejects a retired printable gift path even with valid format: ${name}`, (t) => {
+    const repo = repository(t);
+    stage(repo, name, content);
+    assert.throws(() => api().validateStagedRepository(repo), /Unapproved public repository path/);
+  });
+}
 
 for (const [name, content] of [
   ['site/assets/gift-kit-cover.png', 'plain text, not a PNG'],
-  ['site/pdf/ministry-unopened-tabs-certificate.pdf', 'plain text, not a PDF'],
-  ['site/ministry-title-gift/certificate.svg', '<html>Not SVG</html>'],
   ['site/staticwebapp.config.json', '{malformed'],
   ['README.md', Buffer.from([0xff, 0xfe, 0x00])],
 ]) {

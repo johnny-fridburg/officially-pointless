@@ -7,8 +7,6 @@ const requiredFiles = new Set([
   'index.html',
   'assets/gift-kit-cover.png',
   'ministry-title-gift/index.html',
-  'ministry-title-gift/certificate.svg',
-  'pdf/ministry-unopened-tabs-certificate.pdf',
   'gift-kit/index.html',
   'privacy/index.html',
   'terms/index.html',

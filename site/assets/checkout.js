@@ -143,12 +143,13 @@
     const requestedIndex = titleIndexForSlug(requestedSlug);
     const giftSelect = document.getElementById('gift-title');
     const giftPreview = document.getElementById('gift-title-preview');
+    if (giftSelect && requestedIndex !== null) giftSelect.value = requestedSlug;
     if (giftSelect && giftPreview) {
       if (requestedIndex !== null) giftSelect.value = requestedSlug;
       const updateGiftLink = () => {
         const slug = titleIndexForSlug(giftSelect.value) === null ?
           TITLE_SLUGS[0] : giftSelect.value;
-        giftPreview.href = '/ministry-title-gift/?title=' + slug;
+        giftPreview.href = '/gift-kit/?title=' + slug;
       };
       giftSelect.addEventListener('change', updateGiftLink);
       updateGiftLink();

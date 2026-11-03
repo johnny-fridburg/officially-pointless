@@ -90,3 +90,15 @@ test('reserved Authorization cannot replace missing or invalid app credentials',
  assert.equal((await call(handler,'POST',body,{}, {...reserved,'x-pointless-authorization':'Bearer invalid'})).status,401);
  assert.equal((await call(handler)).body.counts['last-word'],0);
 });
+
+test('deployed entry point closes reads and writes despite legacy enabled flags and forged payment claims', async()=>{
+ const {spawnSync}=require('node:child_process');
+ const script=`const handler=require('./community/index'); (async()=>{const responses=[]; for(const method of ['GET','POST','DELETE']){const context={};await handler(context,{method,headers:{origin:'https://officiallypointless.com','x-pointless-authorization':'Bearer forged'},query:{paid:'true',checkout_return:'success',id:'012345678901234567890123'},body:{paid:true}});responses.push(context.res);}process.stdout.write(JSON.stringify(responses));})().catch(()=>process.exit(1));`;
+ const result=spawnSync(process.execPath,['-e',script],{cwd:__dirname,encoding:'utf8',env:{...process.env,POINTLESS_COMMUNITY_ENABLED:'true',POINTLESS_COMMUNITY_BLOB_URL:'https://example.invalid/not-storage',POINTLESS_GOOGLE_CLIENT_ID:'fixture.apps.googleusercontent.com',POINTLESS_COMMUNITY_ADMIN_TOKEN:'fixture-admin-token-with-at-least-32-characters'}});
+ assert.equal(result.status,0,result.stderr);
+ for(const response of JSON.parse(result.stdout)){
+  assert.equal(response.status,503);
+  assert.deepEqual(response.body,{error:'paid_access_not_open'});
+  assert.equal(response.headers['Cache-Control'],'no-store');
+ }
+});

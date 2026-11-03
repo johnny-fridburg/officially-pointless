@@ -219,10 +219,10 @@ test('gift-kit selection sends only a recognized slug to the free preview', () =
   };
   checkout.mountTitleSelection({document, search: '?title=chief-of-the-snack-drawer&name=Alex'});
   assert.equal(select.value, 'chief-of-the-snack-drawer');
-  assert.equal(preview.href, '/ministry-title-gift/?title=chief-of-the-snack-drawer');
+  assert.equal(preview.href, '/gift-kit/?title=chief-of-the-snack-drawer');
   select.value = 'secretary-of-one-more-coffee';
   select.listeners.change();
-  assert.equal(preview.href, '/ministry-title-gift/?title=secretary-of-one-more-coffee');
+  assert.equal(preview.href, '/gift-kit/?title=secretary-of-one-more-coffee');
 });
 
 test('title preview preselects its title and carries only that title to the kit page', () => {
@@ -325,17 +325,11 @@ test('sales page reports closed and unavailable status without claiming a sale',
   }
 });
 
-test('generated public pages have no unconditional closed-checkout claims', () => {
-  const pages = [
-    'index.html', 'gift-kit/index.html', 'ministry-title-gift/index.html',
-    'contact/index.html', 'privacy/index.html', 'terms/index.html',
-    'sales-status/index.html'
-  ];
-  for (const page of pages) {
+test('storefront defaults to closed purchases and gives no payment entitlement', () => {
+  for (const page of ['index.html', 'gift-kit/index.html', 'ministry-title-gift/index.html', 'sales-status/index.html']) {
     const html = readFileSync(join(__dirname, '..', 'site', page), 'utf8');
-    assert.doesNotMatch(html,
-      /orders are not open|checkout is closed|purchases are not open|there is no live checkout|no purchase can currently be made|before any commercial checkout opens|after seller setup and the delivery test|future paid service/i,
-      page);
+    assert.doesNotMatch(html, /<(?:input|canvas|iframe)\b/i, page);
+    assert.doesNotMatch(html, /personalize (?:this title )?for free|free preview/i, page);
   }
   const sales = readFileSync(join(__dirname, '..', 'site/sales-status/index.html'), 'utf8');
   assert.match(sales, /id="checkout-availability"/);

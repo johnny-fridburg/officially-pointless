@@ -1,7 +1,11 @@
 'use strict';
-const {createCommunityHandler}=require('../community-service');
-const {createBlobStore}=require('../community-store');
-const {createGoogleVerifier}=require('../google-identity');
-const clientId=process.env.POINTLESS_GOOGLE_CLIENT_ID;
-const enabled=process.env.POINTLESS_COMMUNITY_ENABLED==='true';
-module.exports=createCommunityHandler({store:enabled?createBlobStore(process.env.POINTLESS_COMMUNITY_BLOB_URL):null,clientId:clientId||null,verifyIdentity:clientId?createGoogleVerifier({clientId}):null,adminToken:process.env.POINTLESS_COMMUNITY_ADMIN_TOKEN});
+
+// The current storefront grants no activity entitlements. Close the HTTP boundary
+// before constructing storage or identity clients, including under legacy flags.
+module.exports = async context => {
+  context.res = {
+    status: 503,
+    headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'},
+    body: {error: 'paid_access_not_open'}
+  };
+};
