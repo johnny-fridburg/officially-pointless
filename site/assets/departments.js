@@ -78,7 +78,7 @@
   }
   async function accessPage(){
     const status=byId('access-status');
-    try{const state=await request('status');if(state.enabled!==true)return;byId('redeem-form').hidden=false;byId('removal-form').hidden=false;status.textContent='Verify your department collection purchase to begin.';}
+    try{const state=await request('status');if(state.enabled!==true){status.textContent=messages.paid_access_not_open;return;}byId('redeem-form').hidden=false;byId('removal-form').hidden=false;status.textContent='Verify your department collection purchase to begin.';}
     catch{status.textContent=messages.department_unavailable;return;}
     byId('redeem-form').addEventListener('submit',async event=>{
       event.preventDefault();if(busy)return;busy=true;const button=event.currentTarget.querySelector('button');button.disabled=true;status.textContent='Verifying your purchase…';

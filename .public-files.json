@@ -68,19 +68,20 @@
     "site/departments/unnecessary-ribbon/index.html",
     "site/assets/departments/unnecessary-ribbon.png",
     "site/departments/invisible-monument/index.html",
-    "site/assets/departments/invisible-monument.png"
+    "site/assets/departments/invisible-monument.png",
+    "site/departments/index.html"
   ],
   "assetSha256": {
     "site/assets/gift-kit-cover.png": "b99b3f985d325794545e81bf3488917df6ef97142f3058d87bf0761991b67fdd",
-    "site/assets/departments/make-it-worse.png": "571562def9c26ce7d386972a6ce64edf1a11b21894cc608cf7f576beaab5d65e",
-    "site/assets/departments/silence.png": "402b55c0fbbba05b2abbfbf26bfe06b11ef035ec26ed837e0986402340a74f7a",
-    "site/assets/departments/loading.png": "d8a8973ecd344d6e41479a5ab886082a520ca7f90385f8f32cc4d61d862eb850",
-    "site/assets/departments/last-word.png": "831e8692197912d22ef2e724066907e0c6953637cf8cc32ec12fc22780ee2894",
-    "site/assets/departments/museum.png": "2633dd5a26902471d295deb4a78010a6caff6622b11abc500297dbec5225b5ac",
-    "site/assets/departments/golden-error.png": "ff1e1f5a331223a7f2e2686a8cd148f2db0f134e00370230c18d7f87cd6a94da",
-    "site/assets/departments/button.png": "012cb0f0f92d6c28a6123eddce2e06cd16807fef662628db8053a83cea4f05bc",
-    "site/assets/departments/empty-wing.png": "5e013e47c4bc7eefbec8286030af01bcdc67ccb6a10743dd72cae2f9f5fef9a0",
-    "site/assets/departments/unnecessary-ribbon.png": "2b86048aec2620729d7d7f3f8ce248f6fd11626adfaefd939368e3a7c01ad102",
-    "site/assets/departments/invisible-monument.png": "c904d204594df925e818b30ed00e2d5af3cbeb07ba3e9019a13627f33f239d96"
+    "site/assets/departments/make-it-worse.png": "5807bbf23cef50e7d4b40d83f069d4cfb2716f1a820394a7ee83c7639ba932cb",
+    "site/assets/departments/silence.png": "23a64fe8b4b9bc4cc1eaf2185755eb493c0b7bee5c2dd4c10511851e37716ec7",
+    "site/assets/departments/loading.png": "3928001d40e06f14a6c7e0ec01745f28f9d11be75cd112b29669e194dba837d5",
+    "site/assets/departments/last-word.png": "3a1568313a761cc1c398691665ef243cf04335a2bc7180ba5c8e059fe4b32a01",
+    "site/assets/departments/museum.png": "57d4c605ba2ac52b33d28f20e6f4f6a23b28d44de99d260d91ddca66f0c38bd4",
+    "site/assets/departments/golden-error.png": "9842596aee76394f4d4e1df82da19daf2897fe50637e053567f87c39684c230a",
+    "site/assets/departments/button.png": "7e87c2ae530b6291288d51f234afff3f171da9088286bd8aac7dc59876462ef6",
+    "site/assets/departments/empty-wing.png": "65cc84382a7d897b632de88a8944f28bd2dcda6fe710526fd78880dd8c8bc6a6",
+    "site/assets/departments/unnecessary-ribbon.png": "1247af743b071000e2050efaed8d35ee2be8350466ba0825450d209e1659d325",
+    "site/assets/departments/invisible-monument.png": "f6f9b84ef5f38725ded5d6cf3becbb59a949afa09c21cf0341c474499f87103a"
   }
 }

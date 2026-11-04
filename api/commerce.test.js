@@ -180,3 +180,21 @@ test('both approved Origins may request the destination', async () => {
     }
   });
 });
+
+const departmentUrl='https://fridburg.gumroad.com/l/department-collection';
+const departmentCatalog={sku:'department-collection',priceUsd:19,currency:'USD',kind:'online-department-collection'};
+const departmentEnv={POINTLESS_DEPARTMENT_CHECKOUT_ENABLED:'true',GUMROAD_DEPARTMENT_CHECKOUT_URL:departmentUrl,POINTLESS_DEPARTMENTS_ENABLED:'true',POINTLESS_DEPARTMENTS_ACCEPTED:'true',POINTLESS_SELLER_ACCEPTED:'true',GUMROAD_DEPARTMENT_PRODUCT_ID:'fixture-department-product',POINTLESS_DEPARTMENTS_BLOB_URL:'https://teststore.blob.core.windows.net/departments/state.json?sig=fixture',POINTLESS_DEPARTMENTS_ADMIN_TOKEN:'fixture-moderation-token-with-at-least-32-characters'};
+async function withDepartmentEnv(values,action){const original=Object.fromEntries(Object.keys(departmentEnv).map(k=>[k,process.env[k]]));for(const k of Object.keys(departmentEnv)){if(values[k]===undefined)delete process.env[k];else process.env[k]=values[k];}try{return await action();}finally{for(const k of Object.keys(departmentEnv)){if(original[k]===undefined)delete process.env[k];else process.env[k]=original[k];}}}
+test('department checkout is a distinct closed $19 collection, never the gift-kit product',async()=>{
+ await withCommerceEnv({},()=>withDepartmentEnv({},async()=>{const status=await callStatus();assert.deepEqual(status.body.departmentCollection,{catalog:departmentCatalog,checkoutEnabled:false});const response=await callCheckout({sku:'department-collection'});assert.equal(response.status,503);assert.equal(response.body.error,'checkout_not_open');}));
+});
+test('accepted collection checkout returns only its fixed destination without opening gift checkout',async()=>{
+ await withCommerceEnv({},()=>withDepartmentEnv(departmentEnv,async()=>{const status=await callStatus();assert.equal(status.body.checkoutEnabled,false);assert.equal(status.body.departmentCollection.checkoutEnabled,true);const response=await callCheckout({sku:'department-collection'});assert.deepEqual(response.body,{checkoutUrl:departmentUrl,sku:'department-collection',priceUsd:19,currency:'USD',fulfillment:'gumroad'});assert.equal((await callCheckout({sku:'unnecessary-promotions'})).status,503);}));
+});
+test('missing acceptance, moderation, product or storage cannot sell a collection',async()=>{
+ for(const key of Object.keys(departmentEnv))await withDepartmentEnv({...departmentEnv,[key]:undefined},async()=>{assert.equal((await callStatus()).body.departmentCollection.checkoutEnabled,false,key);assert.equal((await callCheckout({sku:'department-collection'})).status,503,key);});
+ for(const url of [departmentUrl+'?paid=true','https://evil.invalid/l/department-collection'])await withDepartmentEnv({...departmentEnv,GUMROAD_DEPARTMENT_CHECKOUT_URL:url},async()=>{assert.equal((await callCheckout({sku:'department-collection'})).status,503);});
+});
+test('gift checkout opening never opens a department collection or accepts forged prices',async()=>{
+ await withCommerceEnv({POINTLESS_CHECKOUT_ENABLED:'true',GUMROAD_CHECKOUT_URL:checkoutUrl},()=>withDepartmentEnv({},async()=>{assert.equal((await callCheckout({sku:'unnecessary-promotions'})).status,200);assert.equal((await callCheckout({sku:'department-collection'})).status,503);for(const extra of [{paid:true},{priceUsd:1},{checkoutUrl:departmentUrl}])assert.equal((await callCheckout({sku:'department-collection',...extra})).status,400);}));
+});

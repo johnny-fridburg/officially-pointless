@@ -3,7 +3,7 @@
 const { getCommerceConfig } = require('../catalog');
 
 module.exports = async function (context) {
-  const { catalog, checkoutEnabled } = getCommerceConfig();
+  const { catalog, checkoutEnabled, departmentCollection } = getCommerceConfig();
   context.res = {
     status: 200,
     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
@@ -12,6 +12,7 @@ module.exports = async function (context) {
       provider: 'gumroad',
       checkoutEnabled,
       catalog,
+      departmentCollection:{catalog:departmentCollection.catalog,checkoutEnabled:departmentCollection.checkoutEnabled},
       ...(!checkoutEnabled && { reason: 'Checkout is not open.' }),
     },
   };

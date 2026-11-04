@@ -32,11 +32,13 @@ module.exports = async function (context, req) {
     return;
   }
 
-  const { catalog, checkoutEnabled, checkoutUrl } = getCommerceConfig();
-  if (body.sku !== catalog.sku) {
+  const config=getCommerceConfig();
+  const selected=body.sku===config.catalog.sku?config:body.sku===config.departmentCollection.catalog.sku?config.departmentCollection:null;
+  if (!selected) {
     respond(context, 404, { error: 'unknown_product' });
     return;
   }
+  const {catalog,checkoutEnabled,checkoutUrl}=selected;
   if (!checkoutEnabled) {
     respond(context, 503, { error: 'checkout_not_open' });
     return;

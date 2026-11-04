@@ -335,3 +335,16 @@ test('storefront defaults to closed purchases and gives no payment entitlement',
   assert.match(sales, /id="checkout-availability"/);
   assert.match(sales, /<script src="\/assets\/checkout\.js" defer><\/script>/);
 });
+
+const departmentSku='department-collection';
+const departmentResponse={checkoutUrl:'https://fridburg.gumroad.com/l/department-collection',sku:departmentSku,priceUsd:19,currency:'USD',fulfillment:'gumroad'};
+test('department UI uses its own status and strictly matched provider response',()=>{
+ const collection={catalog:{sku:departmentSku,priceUsd:19,currency:'USD',kind:'online-department-collection'},checkoutEnabled:true};
+ const status={service:'officially-pointless',provider:'gumroad',checkoutEnabled:false,catalog:{sku:'unnecessary-promotions',priceUsd:19,currency:'USD',kind:'digital-download'},departmentCollection:collection};
+ assert.equal(checkout.statusPresentation(status,departmentSku).disabled,false);
+ assert.equal(checkout.statusPresentation({...status,departmentCollection:{...collection,checkoutEnabled:false}},departmentSku).disabled,true);
+ assert.equal(checkout.statusPresentation({...status,departmentCollection:undefined},departmentSku).disabled,true);
+ assert.equal(checkout.approvedCheckoutUrl(departmentResponse,departmentSku),departmentResponse.checkoutUrl);
+ assert.equal(checkout.approvedCheckoutUrl(departmentResponse,'unnecessary-promotions'),null);
+ assert.equal(checkout.approvedCheckoutUrl({...departmentResponse,checkoutUrl:'https://evil.invalid/'},departmentSku),null);
+});

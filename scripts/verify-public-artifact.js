@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const requiredFiles = new Set([
+  "departments/index.html",
   "assets/checkout.js",
   "assets/gift-kit-cover.png",
   "contact/index.html",

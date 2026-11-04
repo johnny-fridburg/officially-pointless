@@ -15,7 +15,9 @@
     return value !== null && typeof value === 'object' && !Array.isArray(value);
   }
 
-  function statusPresentation(status) {
+  const DEPARTMENT_SKU='department-collection';
+  const DEPARTMENT_URL='https://fridburg.gumroad.com/l/department-collection';
+  function statusPresentation(status, sku=SKU) {
     const error = {
       state: 'error',
       disabled: true,
@@ -26,7 +28,11 @@
         status.provider !== 'gumroad' || typeof status.checkoutEnabled !== 'boolean') {
       return error;
     }
-    if (status.checkoutEnabled === false) {
+    const collection=sku===DEPARTMENT_SKU;
+    if(sku!==SKU&&!collection)return error;
+    const selected=collection?status.departmentCollection:status;
+    if(!isObject(selected)||typeof selected.checkoutEnabled!=='boolean')return error;
+    if (selected.checkoutEnabled === false) {
       return {
         state: 'closed',
         disabled: true,
@@ -34,10 +40,10 @@
         message: 'Orders are not open. You have not been charged.'
       };
     }
-    const catalog = status.catalog;
-    if (!isObject(catalog) || catalog.sku !== SKU ||
+    const catalog = selected.catalog;
+    if (!isObject(catalog) || catalog.sku !== sku ||
         catalog.priceUsd !== 19 || catalog.currency !== 'USD' ||
-        catalog.kind !== 'digital-download') {
+        catalog.kind !== (collection?'online-department-collection':'digital-download')) {
       return error;
     }
     return {
@@ -48,22 +54,24 @@
     };
   }
 
-  function approvedCheckoutUrl(response) {
+  function approvedCheckoutUrl(response,sku=SKU) {
+    const url=sku===SKU?CANONICAL_CHECKOUT_URL:sku===DEPARTMENT_SKU?DEPARTMENT_URL:null;
+    if(!url)return null;
     if (!isObject(response) ||
         Object.keys(response).sort().join(',') !==
           'checkoutUrl,currency,fulfillment,priceUsd,sku' ||
-        response.checkoutUrl !== CANONICAL_CHECKOUT_URL ||
-        response.sku !== SKU || response.priceUsd !== 19 ||
+        response.checkoutUrl !== url ||
+        response.sku !== sku || response.priceUsd !== 19 ||
         response.currency !== 'USD' || response.fulfillment !== 'gumroad') {
       return null;
     }
-    return CANONICAL_CHECKOUT_URL;
+    return url;
   }
 
-  async function mountCheckout({document, fetch, navigate}) {
-    const button = document.getElementById('checkout-button');
-    const status = document.getElementById('checkout-status');
-    const availability = document.getElementById('checkout-availability');
+  async function mountCheckout({document, fetch, navigate, sku=SKU, buttonId='checkout-button',statusId='checkout-status',availabilityId='checkout-availability'}) {
+    const button = document.getElementById(buttonId);
+    const status = document.getElementById(statusId);
+    const availability = document.getElementById(availabilityId);
     const hasCheckoutControls = Boolean(button && status);
     if (!hasCheckoutControls && !availability) return;
 
@@ -75,7 +83,7 @@
       }
       if (availability) {
         availability.textContent = {
-          ready: 'The $19 digital gift kit is available through Gumroad.',
+          ready: sku===DEPARTMENT_SKU?'The $19 Department Collection is available through Gumroad.':'The $19 digital gift kit is available through Gumroad.',
           closed: 'Purchases are not open. You have not been charged.',
           error: 'Checkout availability could not be checked. You have not been charged.'
         }[presentation.state];
@@ -88,7 +96,7 @@
       button.textContent = 'Checking checkout…';
       status.textContent = 'Checking whether orders are open.';
     }
-    if (availability) availability.textContent = 'Checking current gift-kit checkout availability…';
+    if (availability) availability.textContent = sku===DEPARTMENT_SKU?'Checking current collection checkout availability…':'Checking current gift-kit checkout availability…';
     if (hasCheckoutControls) button.addEventListener('click', async () => {
       if (state !== 'ready') return;
       state = 'opening';
@@ -101,10 +109,10 @@
           headers: {'Content-Type': 'application/json', Accept: 'application/json'},
           credentials: 'omit',
           cache: 'no-store',
-          body: JSON.stringify({sku: SKU})
+          body: JSON.stringify({sku})
         });
         if (!response.ok) throw new Error('Checkout unavailable');
-        const destination = approvedCheckoutUrl(await response.json());
+        const destination = approvedCheckoutUrl(await response.json(),sku);
         if (!destination) throw new Error('Invalid checkout destination');
         navigate(destination);
       } catch (_) {
@@ -120,7 +128,7 @@
         cache: 'no-store'
       });
       if (!response.ok) throw new Error('Status unavailable');
-      const presentation = statusPresentation(await response.json());
+      const presentation = statusPresentation(await response.json(),sku);
       state = presentation.state;
       render(presentation);
     } catch (_) {
@@ -177,7 +185,9 @@
       search: browsingContext.location.search,
       Event: browsingContext.Event
     });
+    if(browsingContext.document.getElementById('department-checkout-availability'))mountCheckout({document:browsingContext.document,fetch:browsingContext.fetch.bind(browsingContext),navigate:url=>browsingContext.top.location.assign(url),sku:DEPARTMENT_SKU,buttonId:'department-checkout-button',statusId:'department-checkout-status',availabilityId:'department-checkout-availability'});
     return mountCheckout({
+      sku:browsingContext.document.getElementById('checkout-button')?.getAttribute?.('data-checkout-sku')||SKU,
       document: browsingContext.document,
       fetch: browsingContext.fetch.bind(browsingContext),
       navigate: url => browsingContext.top.location.assign(url)
