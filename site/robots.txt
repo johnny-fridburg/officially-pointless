@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://officiallypointless.com/sitemap.xml

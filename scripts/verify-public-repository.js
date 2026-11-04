@@ -40,6 +40,8 @@ const reviewedPaths = [
   'site/index.html',
   'site/ministry-title-gift/index.html',
   'site/privacy/index.html',
+  'site/robots.txt',
+  'site/sitemap.xml',
   'site/sales-status/index.html',
   'site/staticwebapp.config.json',
   'site/terms/index.html',

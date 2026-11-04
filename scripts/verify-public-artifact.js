@@ -5,6 +5,8 @@ const path = require('node:path');
 
 const requiredFiles = new Set([
   'index.html',
+  'robots.txt',
+  'sitemap.xml',
   'assets/gift-kit-cover.png',
   'ministry-title-gift/index.html',
   'gift-kit/index.html',

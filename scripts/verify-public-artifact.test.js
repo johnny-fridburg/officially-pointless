@@ -94,3 +94,11 @@ test('CLI requires exactly one site directory argument', () => {
   assert.notEqual(missing.status, 0);
   assert.match(missing.stderr, /site directory/i);
 });
+
+for (const discoveryFile of ['robots.txt', 'sitemap.xml']) {
+  test(`rejects missing discovery file: ${discoveryFile}`, t => {
+    const site = copiedSite(t);
+    fs.rmSync(path.join(site, discoveryFile), {force:true});
+    assert.throws(() => validatePublicArtifact(site), new RegExp(discoveryFile.replace('.', '\\.')));
+  });
+}
