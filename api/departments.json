@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "make-it-worse",
+    "name": "Bad Taste Department",
+    "tagline": "Taste is subjective. Yours has been entered into evidence.",
+    "summary": "A citation in defense of questionable taste.",
+    "public": "A named citation, your dedication and a choice of classic, chaos or terminal presentation.",
+    "private": "Award a taste citation, then use the included debate prompt at your next gathering.",
+    "artifact": "Taste citation",
+    "example": "Defend the indefensible: explain why this choice belongs in a museum.",
+    "activity": "debate",
+    "number": 1
+  },
+  {
+    "slug": "silence",
+    "name": "A Minute of Silence",
+    "tagline": "For something that probably did not need commemorating.",
+    "summary": "A solemn minute for a very small loss.",
+    "public": "A dedication with a replayable sixty-second ceremony on its own public page.",
+    "private": "Give a dedication and invite the recipient to observe an entirely optional minute of silence.",
+    "artifact": "A dedication",
+    "example": "In memory of the coffee that went cold before the meeting ended.",
+    "activity": "silence",
+    "number": 2
+  },
+  {
+    "slug": "loading",
+    "name": "The Sponsored Loading Bar",
+    "tagline": "Progress has acquired a patron. It is still going nowhere.",
+    "summary": "A brief delay, generously dedicated.",
+    "public": "A named sponsor credit on a five-second loading ceremony. No real service is delayed.",
+    "private": "Give a five-second loading ceremony to someone who has been waiting impressively.",
+    "artifact": "Loading patron",
+    "example": "For patiently waiting for something that could have been an email.",
+    "activity": "loading",
+    "number": 3
+  },
+  {
+    "slug": "last-word",
+    "name": "The Last Word",
+    "tagline": "An opportunity to conclude. Finally.",
+    "summary": "The final statement, carefully typeset.",
+    "public": "Your short final statement and chosen alias on a shareable page. Other statements remain separate.",
+    "private": "Give someone a beautifully formal last word, then take turns ending an imaginary debate.",
+    "artifact": "Final statement",
+    "example": "I maintain that the snacks were the most important part of the meeting.",
+    "activity": "statement",
+    "number": 4
+  },
+  {
+    "slug": "museum",
+    "name": "The Ordinary Museum",
+    "tagline": "Everyday objects. An entirely unnecessary curatorial department.",
+    "summary": "An exhibit label for an unremarkable object.",
+    "public": "A text-only exhibit with object title, curator alias and caption. No photo upload in this edition.",
+    "private": "Print an exhibit label, place it beside an ordinary object and conduct a tiny guided tour.",
+    "artifact": "Museum exhibit",
+    "example": "A faithful mug. Present at more meetings than most of the team.",
+    "activity": "museum",
+    "number": 5
+  },
+  {
+    "slug": "golden-error",
+    "name": "A Gold-Plated Error",
+    "tagline": "Some failures deserve better stationery.",
+    "summary": "An impeccably unnecessary 404.",
+    "public": "A fictional 404 dedication with a named patron. It is artwork, not a broken page.",
+    "private": "Give a gilded fictional error and invite the recipient to deliver an extravagant acceptance speech.",
+    "artifact": "Fictional error",
+    "example": "Recognition could not be found. This document has been supplied instead.",
+    "activity": "error",
+    "number": 6
+  },
+  {
+    "slug": "button",
+    "name": "The Over-Sponsored Button",
+    "tagline": "An impressive supporting cast. Absolutely no plot.",
+    "summary": "A button with nothing useful to accomplish.",
+    "public": "A named patron credit beside an intentionally useless button on its own page. Clicks are never visitor statistics.",
+    "private": "Dedicate an entirely useless button and invite everyone to announce what it almost achieved.",
+    "artifact": "Button patron",
+    "example": "Made possible by someone who had better things to do.",
+    "activity": "button",
+    "number": 7
+  },
+  {
+    "slug": "empty-wing",
+    "name": "The Empty Wing",
+    "tagline": "A museum extension of impeccable emptiness.",
+    "summary": "A dedication to an entirely empty gallery.",
+    "public": "A named dedication inside a fictional empty museum wing. No ownership of physical space.",
+    "private": "Give an empty-wing dedication, then lead a tour describing the remarkable absence of exhibits.",
+    "artifact": "Wing dedication",
+    "example": "A generous contribution to the preservation of absolutely nothing.",
+    "activity": "wing",
+    "number": 8
+  },
+  {
+    "slug": "unnecessary-ribbon",
+    "name": "The Unnecessary Ribbon",
+    "tagline": "A grand opening for no particular occasion.",
+    "summary": "A ceremony in search of an occasion.",
+    "public": "A named ceremonial opening with your dedication and a replayable opening ceremony.",
+    "private": "Print a ceremonial opening, then hold a ribbon ceremony using an imaginary ribbon.",
+    "artifact": "Ceremonial opening",
+    "example": "Today we open the next chapter of something we have not yet identified.",
+    "activity": "ribbon",
+    "number": 9
+  },
+  {
+    "slug": "invisible-monument",
+    "name": "The Invisible Monument",
+    "tagline": "Remarkable from every angle. Especially the ones without it.",
+    "summary": "An inscription for something you cannot see.",
+    "public": "A named inscription for a fictional invisible monument. No land, monument or legal title is sold.",
+    "private": "Give an inscription, then ask the recipient to describe the monument in impossible detail.",
+    "artifact": "Monument inscription",
+    "example": "For the quiet contributions that nobody saw, but everyone appreciated.",
+    "activity": "monument",
+    "number": 10
+  }
+]

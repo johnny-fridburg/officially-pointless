@@ -4,20 +4,44 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const requiredFiles = new Set([
-  'index.html',
-  'robots.txt',
-  'sitemap.xml',
-  'assets/gift-kit-cover.png',
-  'ministry-title-gift/index.html',
-  'gift-kit/index.html',
-  'privacy/index.html',
-  'terms/index.html',
-  'contact/index.html',
-  'sales-status/index.html',
-  'staticwebapp.config.json',
+  "assets/checkout.js",
+  "assets/gift-kit-cover.png",
+  "contact/index.html",
+  "gift-kit/index.html",
+  "index.html",
+  "ministry-title-gift/index.html",
+  "privacy/index.html",
+  "robots.txt",
+  "sitemap.xml",
+  "sales-status/index.html",
+  "staticwebapp.config.json",
+  "terms/index.html",
+  "assets/departments.js",
+  "departments/access/index.html",
+  "presence/index.html",
+  "departments/make-it-worse/index.html",
+  "assets/departments/make-it-worse.png",
+  "departments/silence/index.html",
+  "assets/departments/silence.png",
+  "departments/loading/index.html",
+  "assets/departments/loading.png",
+  "departments/last-word/index.html",
+  "assets/departments/last-word.png",
+  "departments/museum/index.html",
+  "assets/departments/museum.png",
+  "departments/golden-error/index.html",
+  "assets/departments/golden-error.png",
+  "departments/button/index.html",
+  "assets/departments/button.png",
+  "departments/empty-wing/index.html",
+  "assets/departments/empty-wing.png",
+  "departments/unnecessary-ribbon/index.html",
+  "assets/departments/unnecessary-ribbon.png",
+  "departments/invisible-monument/index.html",
+  "assets/departments/invisible-monument.png"
 ]);
 
-const allowedFiles = new Set([...requiredFiles, 'assets/checkout.js']);
+const allowedFiles = new Set(requiredFiles);
 const allowedDirectories = new Set();
 for (const file of allowedFiles) {
   let directory = path.posix.dirname(file);

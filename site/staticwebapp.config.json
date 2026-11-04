@@ -15,6 +15,18 @@
       "statusCode": 404
     },
     {
+      "route": "/departments/access/*",
+      "headers": {
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "route": "/presence/*",
+      "headers": {
+        "Cache-Control": "no-store"
+      }
+    },
+    {
       "route": "/api/*",
       "allowedRoles": [
         "anonymous"
