@@ -1,0 +1,42 @@
+name: Deploy Officially Pointless products
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: officially-pointless-product-storefronts
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        productApp: [1, 2, 3, 4, 5, 6]
+    env:
+      PRODUCT_DEPLOY_TOKEN: ${{ secrets[format('AZURE_POINTLESS_PRODUCTS_{0}_TOKEN', matrix.productApp)] }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Verify exact public source and artifact
+        run: |
+          node --test
+          node scripts/verify-public-artifact.js site
+          node scripts/verify-public-repository.js --head
+      - name: Require the product storefront deployment credential
+        run: test -n "$PRODUCT_DEPLOY_TOKEN"
+      - name: Deploy verified storefront without private commerce or storage settings
+        uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1
+        with:
+          azure_static_web_apps_api_token: ${{ env.PRODUCT_DEPLOY_TOKEN }}
+          action: upload
+          app_location: site
+          api_location: ''
+          output_location: ''
+          skip_app_build: true
+          production_branch: main

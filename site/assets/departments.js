@@ -3,7 +3,8 @@
 (() => {
   'use strict';
   const byId=id=>document.getElementById(id);
-  const messages={paid_access_not_open:'Purchases and department access are not open yet.',payment_required:'A valid paid department collection purchase is required. Gift-kit, refunded and test purchases do not grant access.',payment_unavailable:'Purchase verification is temporarily unavailable. Please try again.',invalid_submission:'Check the name, dedication and other fields, then try again.',not_your_entry:'This key did not publish that page.',record_not_found:'This public page was removed or could not be found.',department_already_used:'Your purchase already has a public page in this department. Remove that page before publishing a replacement.',retry_changed:'This retry changed the dedication. Please try again.',record_removed:'That earlier publication was removed. Change the dedication before publishing a new page.',publication_limit:'Please wait a little before publishing another dedication.',department_full:'This department has reached its current capacity. Contact support before purchasing access.',department_busy:'The department is busy. Try again shortly.',department_unavailable:'The department is temporarily unavailable.'};
+  const departmentSlugs=new Set(['make-it-worse','silence','loading','last-word','museum','golden-error','button','empty-wing','unnecessary-ribbon','invisible-monument']);
+  const messages={paid_access_not_open:'Purchases and department access are not open yet.',payment_required:'A valid paid purchase for this department is required. Certificate, refunded and test purchases do not grant department access.',department_not_purchased:'This purchase does not include that department. Choose the department you purchased.',payment_unavailable:'Purchase verification is temporarily unavailable. Please try again.',invalid_submission:'Check the name, dedication and other fields, then try again.',not_your_entry:'This key did not publish that page.',record_not_found:'This public page was removed or could not be found.',department_already_used:'Your purchase already has a public page in this department. Remove that page before publishing a replacement.',retry_changed:'This retry changed the dedication. Please try again.',record_removed:'That earlier publication was removed. Change the dedication before publishing a new page.',publication_limit:'Please wait a little before publishing another dedication.',department_full:'This department has reached its current capacity. Contact support before purchasing access.',department_busy:'The department is busy. Try again shortly.',department_unavailable:'The department is temporarily unavailable.'};
   let license=null,createdId=null,requestId=null,fingerprint=null,busy=false;
   async function request(action,body,key){
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
@@ -24,7 +25,7 @@
   function forget(){license=null;createdId=null;requestId=null;fingerprint=null;const workspace=byId('department-workspace');workspace.replaceChildren();workspace.hidden=true;byId('redeem-form').hidden=false;byId('purchase-key').value='';}
   function failed(error,status){status.textContent=error.message||messages.department_unavailable;if(error.code==='payment_required'){forget();byId('access-status').textContent=error.message;}}
   function mountWorkspace(catalog,records=[]){
-    if(!Array.isArray(catalog)||catalog.length!==10||catalog.some(d=>!d||typeof d.name!=='string'||typeof d.slug!=='string'||!/^[a-z-]+$/.test(d.slug)))throw Error(messages.department_unavailable);
+    if(!Array.isArray(catalog)||catalog.length<1||catalog.length>10||catalog.some(d=>!d||typeof d.name!=='string'||!d.name||!departmentSlugs.has(d.slug))||new Set(catalog.map(d=>d.slug)).size!==catalog.length)throw Error(messages.department_unavailable);
     const workspace=byId('department-workspace');
     // Fixed authored markup only. Catalog and visitor text use DOM text values.
     workspace.innerHTML=`<form id="creation-form" class="department-form"><label for="department">Department</label><select id="department"></select><label for="output-mode">Output</label><select id="output-mode"><option value="private">Private gift / activity</option><option value="public">Public presence</option></select><label id="name-label" for="recipient">Recipient name</label><input id="recipient" maxlength="70" required autocomplete="off"><div id="giver-field"><label for="giver">Given by</label><input id="giver" maxlength="70" autocomplete="off"></div><label for="dedication">Dedication</label><textarea id="dedication" maxlength="240" required></textarea><label for="ceremonial-title">Exhibit or ceremonial title</label><input id="ceremonial-title" maxlength="70" autocomplete="off"><div id="theme-field" hidden><label for="theme">Presentation</label><select id="theme"><option value="classic">Classic</option><option value="chaos">Questionable taste</option><option value="terminal">Terminal</option></select></div><div id="public-consent-field" hidden><p>Only your alias, title and dedication will be public. Each purchase permits one active page per department. Removing it permits a replacement.</p><label for="public-consent"><input id="public-consent" type="checkbox"> I want this alias, title and dedication to be public.</label></div><button id="create-output" class="linkbutton" type="submit">Download private gift</button><button id="forget-key" type="button">Forget purchase key</button><p id="creation-status" class="department-action-status" role="status" aria-live="polite"></p><a id="created-link" class="department-action-link" hidden></a><button id="remove-created" type="button" hidden>Remove this public page</button></form>`;
@@ -78,16 +79,21 @@
   }
   async function accessPage(){
     const status=byId('access-status');
-    try{const state=await request('status');if(state.enabled!==true){status.textContent=messages.paid_access_not_open;return;}byId('redeem-form').hidden=false;byId('removal-form').hidden=false;status.textContent='Verify your department collection purchase to begin.';}
+    let enabled=false,removalEnabled=false;
+    try{const state=await request('status');enabled=state.enabled===true;removalEnabled=state.removalEnabled===true||enabled;
+      byId('redeem-form').hidden=!enabled;byId('removal-form').hidden=!removalEnabled;
+      status.textContent=enabled?'Verify your department purchase to begin.':removalEnabled?'New department access is closed. You can still remove a page using the key that published it.':messages.paid_access_not_open;
+      if(!enabled&&!removalEnabled)return;
+    }
     catch{status.textContent=messages.department_unavailable;return;}
-    byId('redeem-form').addEventListener('submit',async event=>{
+    if(enabled)byId('redeem-form').addEventListener('submit',async event=>{
       event.preventDefault();if(busy)return;busy=true;const button=event.currentTarget.querySelector('button');button.disabled=true;status.textContent='Verifying your purchase…';
       const key=byId('purchase-key').value;
       try{const data=await request('access',{},key);mountWorkspace(data.departments,data.records);license=key;byId('purchase-key').value='';}
       catch(e){status.textContent=e.message||messages.department_unavailable;}
       finally{busy=false;button.disabled=false;}
     });
-    byId('removal-form').addEventListener('submit',async event=>{
+    if(removalEnabled)byId('removal-form').addEventListener('submit',async event=>{
       event.preventDefault();if(busy)return;
       const status=byId('removal-status'),key=byId('removal-key').value,raw=byId('removal-id').value.trim();let id=raw;
       if(!/^[a-f0-9]{24}$/.test(id)){try{const url=new URL(raw,location.origin);if(![location.origin,'https://officiallypointless.com','https://www.officiallypointless.com'].includes(url.origin)||url.pathname!=='/presence/')throw Error();id=url.searchParams.get('id');}catch{id='';}}

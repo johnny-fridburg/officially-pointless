@@ -113,3 +113,137 @@ test('encoded aliases and non-dedicated storage targets cannot enable the paid b
  assert.equal(access.departmentConfig({...base,POINTLESS_DEPARTMENTS_BLOB_URL:'https://teststore.blob.core.windows.net/community/%73tate.json?sig=fixture'}).enabled,false);
  assert.equal(access.departmentConfig({...base,POINTLESS_DEPARTMENTS_BLOB_URL:'https://teststore.blob.core.windows.net/departments/%73tate.json?sig=fixture'}).enabled,false);
 });
+
+const MUSEUM_PRODUCT='museum-product-fixture';
+function museumVerifier(extra={},request) {
+  return access.createLicenseVerifier({productId:MUSEUM_PRODUCT,permalink:'pointless-museum',
+    request:request || (async()=>new Response(JSON.stringify({success:true,purchase:purchase({
+      product_id:MUSEUM_PRODUCT,permalink:'pointless-museum',...extra,
+    })}))),
+  });
+}
+
+test('an individual license verifies the exact permalink and grants only its purchased department',async()=>{
+  const grant=await museumVerifier()(KEY);
+  assert.deepEqual(grant.departments,['museum']);
+  assert.match(grant.owner,/^[a-f0-9]{64}$/);
+  assert.match(grant.credentialHash,/^[a-f0-9]{64}$/);
+  for(const extra of [{permalink:'department-collection'},{permalink:'pointless-silence'},{product_id:PRODUCT},{test:true},{price:0},{refunded:true}]) {
+    await assert.rejects(()=>museumVerifier(extra)(KEY),e=>e.code==='payment_required');
+  }
+  await assert.rejects(()=>access.createLicenseVerifier({productId:MUSEUM_PRODUCT,permalink:'pointless-unknown'})(KEY),e=>e.code==='payment_unavailable');
+});
+
+test('individual access lists only its department and its own scoped public records',async()=>{
+  const grant=await museumVerifier()(KEY);
+  const {handler,store}=setup({verifyLicense:museumVerifier()});
+  const created=await call(handler,'publish',input('museum'));
+  assert.equal(created.status,201);
+  store.state.records.push({...store.state.records[0],id:'aaaaaaaaaaaaaaaaaaaaaaaa',department:'silence',name:'Unpurchased department record'});
+  store.state.records.push({...store.state.records[0],id:'bbbbbbbbbbbbbbbbbbbbbbbb',owner:'a'.repeat(64),name:'Another buyer record'});
+  const result=await call(handler,'access');
+  assert.equal(result.status,200);
+  assert.deepEqual(result.body.departments.map(d=>d.slug),['museum']);
+  assert.deepEqual(result.body.records.map(r=>r.id),[created.body.record.id]);
+  assert.equal(store.state.records[0].owner,grant.owner);
+  assert(!JSON.stringify(result.body).includes('Unpurchased department record'));
+  assert(!JSON.stringify(result.body).includes('Another buyer record'));
+});
+
+test('individual keys cannot create gifts or publish into any other department',async()=>{
+  const {handler,store}=setup({verifyLicense:museumVerifier()});
+  for(const d of departments.filter(d=>d.slug!=='museum')) {
+    for(const action of ['gift','publish']) {
+      const result=await call(handler,action,input(d.slug));
+      assert.equal(result.status,403,`${action} ${d.slug}`);
+      assert.equal(result.body.error,'department_not_purchased');
+      assert.equal(result.body.html,undefined);
+      assert.equal(result.body.record,undefined);
+    }
+  }
+  assert.equal(store.state,null);
+  const allowed=await call(handler,'gift',input('museum',{name:'Riley'}));
+  assert.equal(allowed.status,200);
+  assert.match(allowed.body.html,/Presented to Riley/);
+});
+
+test('an empty explicit entitlement cannot fall back to collection access',async()=>{
+  const base=await verifier()(KEY);
+  const {handler,store}=setup({verifyLicense:async()=>({...base,departments:[]})});
+  assert.equal((await call(handler,'access')).status,402);
+  assert.equal((await call(handler,'gift',input('museum'))).status,402);
+  assert.equal(store.state,null);
+});
+
+test('the configured verifier finds individual and collection keys without trusting a client product selector',async()=>{
+  assert.equal(typeof access.createDepartmentLicenseVerifier,'function','Multi-product authoritative verifier is missing');
+  const products=[{productId:PRODUCT,permalink:'department-collection'},
+    {productId:MUSEUM_PRODUCT,permalink:'pointless-museum'},
+    {productId:'silence-product-fixture',permalink:'pointless-silence'}];
+  const request=async(_url,options)=>{
+    const form=new URLSearchParams(options.body);
+    if(form.get('product_id')===MUSEUM_PRODUCT) {
+      return new Response(JSON.stringify({success:true,purchase:purchase({product_id:MUSEUM_PRODUCT,permalink:'pointless-museum'})}));
+    }
+    return new Response(JSON.stringify({success:false}),{status:404});
+  };
+  const verify=access.createDepartmentLicenseVerifier({products,request});
+  assert.deepEqual((await verify(KEY)).departments,['museum']);
+  assert.deepEqual((await verify(KEY,'museum')).departments,['museum']);
+  await assert.rejects(()=>verify(KEY,'silence'),e=>e.code==='payment_required');
+  await assert.rejects(()=>verify(KEY,'unknown'),e=>e.code==='payment_required');
+  const collection=access.createDepartmentLicenseVerifier({products,request:async(_url,options)=>{
+    if(new URLSearchParams(options.body).get('product_id')===PRODUCT)return new Response(JSON.stringify({success:true,purchase:purchase()}));
+    return new Response(JSON.stringify({success:false}),{status:404});
+  }});
+  assert.equal((await collection(KEY,'museum')).departments,undefined,'Legacy collection grant stays compatible');
+  assert.equal((await collection(KEY,'silence')).departments,undefined);
+});
+
+test('multi-product verification distinguishes an unknown key from provider unavailability',async()=>{
+  assert.equal(typeof access.createDepartmentLicenseVerifier,'function');
+  const products=[{productId:MUSEUM_PRODUCT,permalink:'pointless-museum'}];
+  const rejected=access.createDepartmentLicenseVerifier({products,request:async()=>new Response(JSON.stringify({success:false}),{status:404})});
+  await assert.rejects(()=>rejected(KEY),e=>e.code==='payment_required');
+  const unavailable=access.createDepartmentLicenseVerifier({products,request:async()=>new Response('',{status:503})});
+  await assert.rejects(()=>unavailable(KEY),e=>e.code==='payment_unavailable');
+});
+
+test('an individually accepted product enables its own paid boundary without accepting the collection',()=>{
+  const config={POINTLESS_DEPARTMENTS_ENABLED:'true',POINTLESS_SELLER_ACCEPTED:'true',
+    POINTLESS_DEPARTMENTS_BLOB_URL:'https://teststore.blob.core.windows.net/departments/state.json?sig=fixture',
+    POINTLESS_DEPARTMENTS_ADMIN_TOKEN:'fixture-removal-token-of-at-least-32-characters',
+    POINTLESS_DEPARTMENT_MUSEUM_ACCEPTED:'true',GUMROAD_DEPARTMENT_MUSEUM_PRODUCT_ID:MUSEUM_PRODUCT};
+  const accepted=access.departmentConfig(config);
+  assert.equal(accepted.enabled,true);
+  assert.equal(accepted.collectionEnabled,false);
+  assert.deepEqual(accepted.products,[{productId:MUSEUM_PRODUCT,permalink:'pointless-museum'}]);
+  for(const name of Object.keys(config))assert.equal(access.departmentConfig({...config,[name]:undefined}).enabled,false,name);
+  assert.equal(access.departmentConfig({...config,POINTLESS_DEPARTMENT_MUSEUM_ACCEPTED:'TRUE'}).enabled,false);
+  assert.equal(access.departmentConfig({...config,GUMROAD_DEPARTMENT_MUSEUM_PRODUCT_ID:' '}).enabled,false);
+});
+
+test('original individual keys and operators can remove stored pages while new paid access is closed',async()=>{
+  const {handler,store,advance}=setup({verifyLicense:museumVerifier()});
+  const created=await call(handler,'publish',input('museum'));
+  assert.equal(created.status,201);
+  const closed=setup({enabled:false,removalEnabled:true,store,verifyLicense:async()=>{throw Error('refunded or provider offline');}}).handler;
+  const state=await call(closed,'status',{},'','GET');
+  assert.equal(state.body.enabled,false);
+  assert.equal(state.body.removalEnabled,true);
+  assert.equal((await call(closed,'gift',input('museum'))).status,503);
+  assert.equal((await call(closed,'remove',{id:created.body.record.id})).status,200);
+  assert.equal(store.state.records.length,0);
+  advance(11000);
+  const again=await call(handler,'publish',input('museum'));
+  const admin='fixture-operator-token-of-at-least-32-characters';
+  const operator=setup({enabled:false,removalEnabled:true,store,adminToken:admin,verifyLicense:null}).handler;
+  const context={};await operator(context,{method:'POST',params:{action:'remove'},headers:{origin:'https://officiallypointless.com','x-pointless-operator':admin},body:{id:again.body.record.id}});
+  assert.equal(context.res.status,200);
+});
+
+test('product storefront origins cannot submit purchase keys or create department outputs',async()=>{
+  let calls=0;const {handler}=setup({verifyLicense:async()=>{calls++;throw Error('must not verify');}});
+  for(const action of ['access','gift','publish','remove'])assert.equal((await call(handler,action,input('museum'),KEY,'POST','https://museum.officiallypointless.com')).status,403);
+  assert.equal(calls,0);
+});

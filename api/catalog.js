@@ -6,16 +6,36 @@ const departmentCatalog=Object.freeze({sku:'department-collection',priceUsd:19,c
 const departmentUrl='https://fridburg.gumroad.com/l/department-collection';
 
 const checkoutUrl = 'https://fridburg.gumroad.com/l/unnecessary-promotions';
+const certificateSlugs=Object.freeze([
+  'minister-of-unopened-tabs','secretary-of-one-more-coffee','director-of-unnecessary-meetings',
+  'chief-of-the-snack-drawer','commissioner-of-replying-tomorrow',
+]);
+const certificateCatalog=Object.freeze(certificateSlugs.map(slug=>Object.freeze({
+  sku:'certificate-'+slug,priceUsd:19,currency:'USD',kind:'digital-certificate',
+})));
 
 function getCommerceConfig(env = process.env) {
   const departments=departmentConfig(env);
-  const departmentCheckoutEnabled=Boolean(departments.enabled&&departments.adminToken?.length>=32&&env.POINTLESS_DEPARTMENT_CHECKOUT_ENABLED==='true'&&env.GUMROAD_DEPARTMENT_CHECKOUT_URL===departmentUrl);
   return {
     catalog,
-    checkoutEnabled: env.POINTLESS_CHECKOUT_ENABLED === 'true' &&
-      env.GUMROAD_CHECKOUT_URL === checkoutUrl,
+    // Original bundle buyers retain their downloads/access. New sales use
+    // single-product SKUs even when old launch settings remain configured.
+    checkoutEnabled: false,
     checkoutUrl,
-    departmentCollection:{catalog:departmentCatalog,checkoutEnabled:departmentCheckoutEnabled,checkoutUrl:departmentUrl},
+    departmentCollection:{catalog:departmentCatalog,checkoutEnabled:false,checkoutUrl:departmentUrl},
+    departmentProducts:departments.departmentProducts.map(({sku,checkoutEnabled,checkoutUrl})=>({
+      catalog:Object.freeze({sku,priceUsd:19,currency:'USD',kind:'online-department'}),checkoutEnabled,checkoutUrl,
+    })),
+    certificateProducts:certificateCatalog.map(catalog=>{
+      const slug=catalog.sku.slice('certificate-'.length),name=slug.toUpperCase().replaceAll('-','_');
+      const productId=env['GUMROAD_CERTIFICATE_'+name+'_PRODUCT_ID'];
+      const checkoutUrl='https://fridburg.gumroad.com/l/pointless-'+slug;
+      const checkoutEnabled=Boolean(env.POINTLESS_SELLER_ACCEPTED==='true'&&
+        env['POINTLESS_CERTIFICATE_'+name+'_ACCEPTED']==='true'&&env['POINTLESS_CERTIFICATE_'+name+'_CHECKOUT_ENABLED']==='true'&&
+        typeof productId==='string'&&productId.length>0&&productId.length<=128&&!/[\s\x00-\x1f\x7f]/.test(productId)&&
+        env['GUMROAD_CERTIFICATE_'+name+'_CHECKOUT_URL']===checkoutUrl);
+      return {catalog,checkoutEnabled,checkoutUrl};
+    }),
   };
 }
 

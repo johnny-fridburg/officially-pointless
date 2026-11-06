@@ -1,0 +1,152 @@
+[
+  {
+    "sku": "certificate-minister-of-unopened-tabs",
+    "name": "Minister of Unopened Tabs",
+    "kind": "digital-certificate",
+    "permalink": "pointless-minister-of-unopened-tabs",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/certificates/minister-of-unopened-tabs.png",
+    "path": "/certificates/minister-of-unopened-tabs/"
+  },
+  {
+    "sku": "certificate-secretary-of-one-more-coffee",
+    "name": "Secretary of One More Coffee",
+    "kind": "digital-certificate",
+    "permalink": "pointless-secretary-of-one-more-coffee",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/certificates/secretary-of-one-more-coffee.png",
+    "path": "/certificates/secretary-of-one-more-coffee/"
+  },
+  {
+    "sku": "certificate-director-of-unnecessary-meetings",
+    "name": "Director of Unnecessary Meetings",
+    "kind": "digital-certificate",
+    "permalink": "pointless-director-of-unnecessary-meetings",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/certificates/director-of-unnecessary-meetings.png",
+    "path": "/certificates/director-of-unnecessary-meetings/"
+  },
+  {
+    "sku": "certificate-chief-of-the-snack-drawer",
+    "name": "Chief of the Snack Drawer",
+    "kind": "digital-certificate",
+    "permalink": "pointless-chief-of-the-snack-drawer",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/certificates/chief-of-the-snack-drawer.png",
+    "path": "/certificates/chief-of-the-snack-drawer/"
+  },
+  {
+    "sku": "certificate-commissioner-of-replying-tomorrow",
+    "name": "Commissioner of Replying Tomorrow",
+    "kind": "digital-certificate",
+    "permalink": "pointless-commissioner-of-replying-tomorrow",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/certificates/commissioner-of-replying-tomorrow.png",
+    "path": "/certificates/commissioner-of-replying-tomorrow/"
+  },
+  {
+    "sku": "department-make-it-worse",
+    "name": "Bad Taste Department",
+    "kind": "online-department",
+    "permalink": "pointless-make-it-worse",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/make-it-worse.png",
+    "path": "/departments/make-it-worse/"
+  },
+  {
+    "sku": "department-silence",
+    "name": "A Minute of Silence",
+    "kind": "online-department",
+    "permalink": "pointless-silence",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/silence.png",
+    "path": "/departments/silence/"
+  },
+  {
+    "sku": "department-loading",
+    "name": "The Sponsored Loading Bar",
+    "kind": "online-department",
+    "permalink": "pointless-loading",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/loading.png",
+    "path": "/departments/loading/"
+  },
+  {
+    "sku": "department-last-word",
+    "name": "The Last Word",
+    "kind": "online-department",
+    "permalink": "pointless-last-word",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/last-word.png",
+    "path": "/departments/last-word/"
+  },
+  {
+    "sku": "department-museum",
+    "name": "The Ordinary Museum",
+    "kind": "online-department",
+    "permalink": "pointless-museum",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/museum.png",
+    "path": "/departments/museum/"
+  },
+  {
+    "sku": "department-golden-error",
+    "name": "A Gold-Plated Error",
+    "kind": "online-department",
+    "permalink": "pointless-golden-error",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/golden-error.png",
+    "path": "/departments/golden-error/"
+  },
+  {
+    "sku": "department-button",
+    "name": "The Over-Sponsored Button",
+    "kind": "online-department",
+    "permalink": "pointless-button",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/button.png",
+    "path": "/departments/button/"
+  },
+  {
+    "sku": "department-empty-wing",
+    "name": "The Empty Wing",
+    "kind": "online-department",
+    "permalink": "pointless-empty-wing",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/empty-wing.png",
+    "path": "/departments/empty-wing/"
+  },
+  {
+    "sku": "department-unnecessary-ribbon",
+    "name": "The Unnecessary Ribbon",
+    "kind": "online-department",
+    "permalink": "pointless-unnecessary-ribbon",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/unnecessary-ribbon.png",
+    "path": "/departments/unnecessary-ribbon/"
+  },
+  {
+    "sku": "department-invisible-monument",
+    "name": "The Invisible Monument",
+    "kind": "online-department",
+    "permalink": "pointless-invisible-monument",
+    "priceUsd": 19,
+    "currency": "USD",
+    "image": "/assets/departments/invisible-monument.png",
+    "path": "/departments/invisible-monument/"
+  }
+]

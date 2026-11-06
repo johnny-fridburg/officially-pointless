@@ -2,7 +2,6 @@
 
 (() => {
   const SKU = 'unnecessary-promotions';
-  const CANONICAL_CHECKOUT_URL = 'https://fridburg.gumroad.com/l/unnecessary-promotions';
   const TITLE_SLUGS = [
     'minister-of-unopened-tabs',
     'secretary-of-one-more-coffee',
@@ -16,7 +15,17 @@
   }
 
   const DEPARTMENT_SKU='department-collection';
-  const DEPARTMENT_URL='https://fridburg.gumroad.com/l/department-collection';
+  const DEPARTMENT_SLUGS=Object.freeze(['make-it-worse','silence','loading','last-word','museum','golden-error','button','empty-wing','unnecessary-ribbon','invisible-monument']);
+  const COMMERCE_ORIGIN='https://officiallypointless.com';
+  const PRODUCT_ORIGINS=new Set(['https://promotions.officiallypointless.com',...DEPARTMENT_SLUGS.map(slug=>'https://'+slug+'.officiallypointless.com')]);
+  const closedPresentation={state:'closed',disabled:true,buttonLabel:'Checkout is not open yet',message:'Orders are not open. You have not been charged.'};
+  function checkoutProduct(sku){
+    if(sku===SKU||sku===DEPARTMENT_SKU)return {retired:true};
+    const title=typeof sku==='string'&&sku.startsWith('certificate-')?sku.slice('certificate-'.length):null;
+    if(TITLE_SLUGS.includes(title))return {url:'https://fridburg.gumroad.com/l/pointless-'+title,kind:'digital-certificate'};
+    const slug=typeof sku==='string'&&sku.startsWith('department-')?sku.slice('department-'.length):null;
+    return DEPARTMENT_SLUGS.includes(slug)?{url:'https://fridburg.gumroad.com/l/pointless-'+slug,kind:'online-department'}:null;
+  }
   function statusPresentation(status, sku=SKU) {
     const error = {
       state: 'error',
@@ -28,22 +37,22 @@
         status.provider !== 'gumroad' || typeof status.checkoutEnabled !== 'boolean') {
       return error;
     }
-    const collection=sku===DEPARTMENT_SKU;
-    if(sku!==SKU&&!collection)return error;
-    const selected=collection?status.departmentCollection:status;
+    const product=checkoutProduct(sku);
+    if(!product)return error;
+    if(product.retired)return {...closedPresentation};
+    const products=product.kind==='digital-certificate'?status.certificateProducts:status.departmentProducts;
+    if(!Array.isArray(products))return error;
+    const matches=products.filter(entry=>isObject(entry)&&isObject(entry.catalog)&&entry.catalog.sku===sku);
+    if(matches.length!==1)return error;
+    const selected=matches[0];
     if(!isObject(selected)||typeof selected.checkoutEnabled!=='boolean')return error;
     if (selected.checkoutEnabled === false) {
-      return {
-        state: 'closed',
-        disabled: true,
-        buttonLabel: 'Checkout is not open yet',
-        message: 'Orders are not open. You have not been charged.'
-      };
+      return {...closedPresentation};
     }
     const catalog = selected.catalog;
     if (!isObject(catalog) || catalog.sku !== sku ||
         catalog.priceUsd !== 19 || catalog.currency !== 'USD' ||
-        catalog.kind !== (collection?'online-department-collection':'digital-download')) {
+        catalog.kind !== product.kind) {
       return error;
     }
     return {
@@ -55,7 +64,7 @@
   }
 
   function approvedCheckoutUrl(response,sku=SKU) {
-    const url=sku===SKU?CANONICAL_CHECKOUT_URL:sku===DEPARTMENT_SKU?DEPARTMENT_URL:null;
+    const url=checkoutProduct(sku)?.url;
     if(!url)return null;
     if (!isObject(response) ||
         Object.keys(response).sort().join(',') !==
@@ -68,7 +77,7 @@
     return url;
   }
 
-  async function mountCheckout({document, fetch, navigate, sku=SKU, buttonId='checkout-button',statusId='checkout-status',availabilityId='checkout-availability'}) {
+  async function mountCheckout({document, fetch, navigate, sku=SKU, apiBase='', buttonId='checkout-button',statusId='checkout-status',availabilityId='checkout-availability'}) {
     const button = document.getElementById(buttonId);
     const status = document.getElementById(statusId);
     const availability = document.getElementById(availabilityId);
@@ -83,7 +92,7 @@
       }
       if (availability) {
         availability.textContent = {
-          ready: sku===DEPARTMENT_SKU?'The $19 Department Collection is available through Gumroad.':'The $19 digital gift kit is available through Gumroad.',
+          ready: checkoutProduct(sku)?.kind==='digital-certificate'?'The $19 personalized certificate is available through Gumroad.':'The $19 individual department purchase is available through Gumroad.',
           closed: 'Purchases are not open. You have not been charged.',
           error: 'Checkout availability could not be checked. You have not been charged.'
         }[presentation.state];
@@ -96,7 +105,10 @@
       button.textContent = 'Checking checkout…';
       status.textContent = 'Checking whether orders are open.';
     }
-    if (availability) availability.textContent = sku===DEPARTMENT_SKU?'Checking current collection checkout availability…':'Checking current gift-kit checkout availability…';
+    if (availability) availability.textContent = 'Checking current product checkout availability…';
+    if(!checkoutProduct(sku)||!['',COMMERCE_ORIGIN].includes(apiBase)){
+      state='error';render(statusPresentation(null,sku));return;
+    }
     if (hasCheckoutControls) button.addEventListener('click', async () => {
       if (state !== 'ready') return;
       state = 'opening';
@@ -104,25 +116,31 @@
       button.textContent = 'Opening checkout…';
       status.textContent = 'Requesting the approved Gumroad checkout. No charge has been made.';
       try {
-        const response = await fetch('/api/billing/checkout', {
+        const response = await fetch(apiBase+'/api/billing/checkout', {
           method: 'POST',
           headers: {'Content-Type': 'application/json', Accept: 'application/json'},
           credentials: 'omit',
           cache: 'no-store',
           body: JSON.stringify({sku})
         });
-        if (!response.ok) throw new Error('Checkout unavailable');
-        const destination = approvedCheckoutUrl(await response.json(),sku);
+        const data=await response.json();
+        if (!response.ok) {
+          if(response.status===503&&isObject(data)&&data.error==='checkout_not_open'){
+            state='closed';render(closedPresentation);return;
+          }
+          throw new Error('Checkout unavailable');
+        }
+        const destination = approvedCheckoutUrl(data,sku);
         if (!destination) throw new Error('Invalid checkout destination');
         navigate(destination);
       } catch (_) {
         state = 'error';
-        render(statusPresentation(null));
+        render(statusPresentation(null,sku));
       }
     });
 
     try {
-      const response = await fetch('/api/billing/status', {
+      const response = await fetch(apiBase+'/api/billing/status', {
         headers: {Accept: 'application/json'},
         credentials: 'omit',
         cache: 'no-store'
@@ -133,7 +151,7 @@
       render(presentation);
     } catch (_) {
       state = 'error';
-      render(statusPresentation(null));
+      render(statusPresentation(null,sku));
     }
   }
 
@@ -157,7 +175,8 @@
       const updateGiftLink = () => {
         const slug = titleIndexForSlug(giftSelect.value) === null ?
           TITLE_SLUGS[0] : giftSelect.value;
-        giftPreview.href = '/gift-kit/?title=' + slug;
+        const productOrigin=giftPreview.href?.startsWith('https://promotions.officiallypointless.com/')?'https://promotions.officiallypointless.com':'';
+        giftPreview.href = productOrigin + '/certificates/' + slug + '/';
       };
       giftSelect.addEventListener('change', updateGiftLink);
       updateGiftLink();
@@ -172,11 +191,26 @@
       }
       const updateKitLink = () => {
         const slug = titleSlugForIndex(titleSelect.value) || TITLE_SLUGS[0];
-        kitLink.href = '/gift-kit/?title=' + slug;
+        kitLink.href = '/certificates/' + slug + '/';
       };
       titleSelect.addEventListener('change', updateKitLink);
       updateKitLink();
     }
+  }
+
+  function commerceApiBase(location){
+    const origin=location.origin;
+    if(typeof origin==='string'){
+      if(PRODUCT_ORIGINS.has(origin))return COMMERCE_ORIGIN;
+      if(origin===COMMERCE_ORIGIN||origin==='https://www.officiallypointless.com'||/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::[0-9]+)?$/.test(origin))return '';
+      return null;
+    }
+    // Some embedded contexts/test harnesses expose only location.hostname.
+    if(typeof location.hostname==='string'&&location.hostname){
+      if(PRODUCT_ORIGINS.has('https://'+location.hostname))return COMMERCE_ORIGIN;
+      return ['officiallypointless.com','www.officiallypointless.com','localhost','127.0.0.1'].includes(location.hostname)?'':null;
+    }
+    return '';
   }
 
   function mountBrowser(browsingContext) {
@@ -185,13 +219,16 @@
       search: browsingContext.location.search,
       Event: browsingContext.Event
     });
-    if(browsingContext.document.getElementById('department-checkout-availability'))mountCheckout({document:browsingContext.document,fetch:browsingContext.fetch.bind(browsingContext),navigate:url=>browsingContext.top.location.assign(url),sku:DEPARTMENT_SKU,buttonId:'department-checkout-button',statusId:'department-checkout-status',availabilityId:'department-checkout-availability'});
-    return mountCheckout({
+    const apiBase=commerceApiBase(browsingContext.location),mounts=[];
+    if(browsingContext.document.getElementById('department-checkout-availability'))mounts.push(mountCheckout({document:browsingContext.document,fetch:browsingContext.fetch.bind(browsingContext),navigate:url=>browsingContext.top.location.assign(url),apiBase,sku:DEPARTMENT_SKU,buttonId:'department-checkout-button',statusId:'department-checkout-status',availabilityId:'department-checkout-availability'}));
+    mounts.push(mountCheckout({
       sku:browsingContext.document.getElementById('checkout-button')?.getAttribute?.('data-checkout-sku')||SKU,
+      apiBase,
       document: browsingContext.document,
       fetch: browsingContext.fetch.bind(browsingContext),
       navigate: url => browsingContext.top.location.assign(url)
-    });
+    }));
+    return Promise.all(mounts);
   }
 
   const exported = {

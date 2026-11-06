@@ -4,7 +4,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const requiredFiles = new Set([
-  "departments/index.html",
   "assets/checkout.js",
   "assets/gift-kit-cover.png",
   "contact/index.html",
@@ -39,7 +38,25 @@ const requiredFiles = new Set([
   "departments/unnecessary-ribbon/index.html",
   "assets/departments/unnecessary-ribbon.png",
   "departments/invisible-monument/index.html",
-  "assets/departments/invisible-monument.png"
+  "assets/departments/invisible-monument.png",
+  "departments/index.html",
+  "assets/product-dispatch.js",
+  "certificates/minister-of-unopened-tabs/index.html",
+  "certificates/secretary-of-one-more-coffee/index.html",
+  "certificates/director-of-unnecessary-meetings/index.html",
+  "certificates/chief-of-the-snack-drawer/index.html",
+  "certificates/commissioner-of-replying-tomorrow/index.html",
+  "assets/certificates/minister-of-unopened-tabs.png",
+  "assets/certificates/secretary-of-one-more-coffee.png",
+  "assets/certificates/director-of-unnecessary-meetings.png",
+  "assets/certificates/chief-of-the-snack-drawer.png",
+  "assets/certificates/commissioner-of-replying-tomorrow.png",
+  "assets/gifts.js",
+  "assets/gifts.css",
+  "gifts/index.html",
+  "gifts/create/index.html",
+  "gifts/view/index.html",
+  "people/index.html"
 ]);
 
 const allowedFiles = new Set(requiredFiles);
