@@ -16,7 +16,7 @@ module.exports = async function (context, req) {
   }
 
   const config=getCommerceConfig();
-  const selected=[config,config.departmentCollection,...config.departmentProducts,...config.certificateProducts,...config.gameProducts].find(product=>product.catalog.sku===body.sku);
+  const selected=[config,config.departmentCollection,...config.departmentProducts,...config.certificateProducts,...config.gameProducts,...config.honorProducts].find(product=>product.catalog.sku===body.sku);
   if (!selected) {
     respond(404, { error: 'unknown_product' });
     return;

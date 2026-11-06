@@ -1,5 +1,6 @@
 'use strict';
 (() => {
+  const tinyRuleTitles = Object.freeze(['A ceremonial nod is required', 'The opening must be announced twice', 'A tiny pause precedes the opening']);
   const products = Object.freeze({
     'department-make-it-worse': {slug: 'make-it-worse', name: 'Bad Taste Department', action: 'none'},
     'department-silence': {slug: 'silence', name: 'A Minute of Silence', action: 'silence', seconds: 60},
@@ -12,14 +13,22 @@
     'department-unnecessary-ribbon': {slug: 'unnecessary-ribbon', name: 'The Unnecessary Ribbon', action: 'ribbon'},
     'department-invisible-monument': {slug: 'invisible-monument', name: 'The Invisible Monument', action: 'none'},
     'game-name-the-boss': {slug: 'name-the-boss', name: 'Name the Boss', action: 'boss'},
+    'honor-patron-of-the-next-nothing': {slug: 'patron-of-the-next-nothing', name: 'Patron of the Next Nothing', action: 'ceremony'},
+    'honor-the-bench-nobody-needed': {slug: 'the-bench-nobody-needed', name: 'The Bench Nobody Needed', action: 'none'},
+    'honor-the-honorary-forecast': {slug: 'the-honorary-forecast', name: 'The Honorary Forecast', action: 'none', fixedForecast: 'Outlook: a ceremonial nod, followed by absolutely ordinary conditions.'},
+    'honor-commissioner-of-a-tiny-rule': {slug: 'commissioner-of-a-tiny-rule', name: 'Commissioner of a Tiny Rule', action: 'ceremony', titleChoices: tinyRuleTitles},
   });
   function productFor(sku) {
     if (typeof sku !== 'string' || !Object.hasOwn(products, sku)) throw Error('This product is unavailable.');
     return products[sku];
   }
   function apiBase(host) {
-    return Object.values(products).some(product => product.action !== 'boss' && host === product.slug + '.officiallypointless.com')
+    return Object.entries(products).some(([sku, product]) => sku.startsWith('department-') && host === product.slug + '.officiallypointless.com')
       ? 'https://officiallypointless.com' : '';
+  }
+  function productPath(sku) {
+    const product = productFor(sku);
+    return (sku.startsWith('honor-') ? '/honors/' : sku.startsWith('game-') ? '/games/' : '/departments/') + product.slug + '/';
   }
   function availability(body, sku) {
     const closed = {previewEnabled: false, purchaseEnabled: false, participationEnabled: false};
@@ -37,9 +46,11 @@
     return text;
   }
   function previewPayload(sku, fields) {
-    productFor(sku);
+    const product = productFor(sku);
     if (!fields || fields.consent !== true) throw Error('Agree to public display of this name, title and dedication before previewing.');
-    return {action: 'preview', sku, name: publicText(fields.name, 60, true), title: publicText(fields.title, 70, true),
+    const title = publicText(fields.title, 70, true);
+    if (product.titleChoices && !product.titleChoices.includes(title)) throw Error('Choose one of the three fixed tiny rules.');
+    return {action: 'preview', sku, name: publicText(fields.name, 60, true), title,
       text: publicText(fields.text, 240), consent: true};
   }
   function base64Bytes(value) {
@@ -73,6 +84,7 @@
       (value.completed && value.actionsRemaining !== 0) || (!value.completed && value.actionsRemaining === 0)) {
       throw Error('This public record could not be loaded.');
     }
+    if (product.titleChoices && !product.titleChoices.includes(value.title) || product.fixedForecast && value.result !== product.fixedForecast) throw Error('This public record could not be loaded.');
     return {id: value.id, sku: value.sku, name: publicText(value.name, 60, true), title: publicText(value.title, 70, true),
       text: publicText(value.text, 240), createdAt: value.createdAt, completed: value.completed,
       result: value.result, actionsRemaining: value.actionsRemaining};
@@ -100,11 +112,11 @@
     if (!effect || effect.completed || effect.actionsRemaining <= 0) return [];
     const product = productFor(effect.sku);
     if (product.action === 'boss') return ['attack', 'defend', 'boast'];
-    if (product.action === 'button' || product.action === 'ribbon') return ['activate'];
+    if (product.action === 'button' || product.action === 'ribbon' || product.action === 'ceremony') return ['activate'];
     if (product.action === 'silence' || product.action === 'loading') return [effect.result.startsWith('Ceremony started') ? 'complete' : 'start'];
     return [];
   }
-  if (typeof module !== 'undefined' && module.exports) module.exports = {apiBase, availability, previewPayload, readPreview, readEffect, readFinished, readRecovered, definiteRejection, allowedMoves};
+  if (typeof module !== 'undefined' && module.exports) module.exports = {apiBase, productPath, availability, previewPayload, readPreview, readEffect, readFinished, readRecovered, definiteRejection, allowedMoves};
   if (typeof document === 'undefined') return;
 
   const base = apiBase(location.hostname);
@@ -126,6 +138,7 @@
     not_found: 'This public record is unavailable or has been removed.',
     invalid_name: 'Enter a public name up to 60 characters and a title up to 70 characters.',
     invalid_title: 'Enter a public title up to 70 characters.',
+    invalid_rule_title: 'Choose one of the three fixed tiny rules.',
     invalid_text: 'Use a dedication up to 240 characters on one line.',
     unsupported_characters: 'This edition supports Latin letters, numbers and ordinary punctuation.',
     unsupported_name_characters: 'This edition supports Latin letters, numbers and ordinary punctuation.',
@@ -160,7 +173,9 @@
     article.append(heading, node('p', 'Credited to ' + effect.name, 'effect-credit'), node('p', effect.text, 'effect-dedication'),
       node('p', effect.result, 'effect-recorded-result'), node('p', effect.completed ? 'Completed and recorded.' : effect.actionsRemaining + ' purchased action(s) remaining.', 'fine'));
     const date = node('time', new Date(effect.createdAt).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}), 'fine');
-    date.dateTime = new Date(effect.createdAt).toISOString(); article.append(date); return article;
+    date.dateTime = new Date(effect.createdAt).toISOString(); article.append(date);
+    const productLink = node('a', 'View this occasion and purchase availability', 'text-link');
+    productLink.href = 'https://officiallypointless.com' + productPath(effect.sku); article.append(productLink); return article;
   }
   const publicPage = document.getElementById('effect-gallery-page');
   if (publicPage) {
@@ -244,6 +259,7 @@
     controls();
   }
   for (const field of [name, title, text, consent]) field.addEventListener('input', invalidate);
+  title.addEventListener('change', invalidate);
   consent.addEventListener('change', invalidate); removeConsent.addEventListener('change', controls);
   existingConsent.addEventListener('change', controls);
   async function request(payload) {

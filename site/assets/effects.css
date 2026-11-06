@@ -3,7 +3,7 @@
 .effect-artwork figcaption{font-size:12px;color:var(--muted);margin:14px 0 26px}.effect-contract{border-top:1px solid var(--line);padding-top:18px}
 .effect-offer,.effect-owner,.effect-record{border:1px solid var(--line);background:#fbf7ef;padding:27px;min-width:0}
 .effect-offer h2{font-size:30px}.effect-offer .price{margin:18px 0 26px}.effect-offer form{min-width:0}
-.effect-offer label{display:block;font-size:13px;margin:18px 0 7px}.effect-offer input:not([type=checkbox]),.effect-offer textarea{display:block;width:100%;min-width:0;padding:11px;border:1px solid var(--line);border-radius:2px;background:#fffaf1;color:var(--ink);font:inherit}
+.effect-offer label{display:block;font-size:13px;margin:18px 0 7px}.effect-offer input:not([type=checkbox]),.effect-offer textarea,.effect-offer select{display:block;width:100%;min-width:0;padding:11px;border:1px solid var(--line);border-radius:2px;background:#fffaf1;color:var(--ink);font:inherit}
 .effect-offer textarea{resize:vertical}.effect-offer .effect-consent,.effect-owner .effect-consent{display:flex;gap:12px;align-items:flex-start;font-size:13px;line-height:1.55;margin:18px 0}
 .effect-consent input{width:18px;height:18px;flex:0 0 18px;margin:3px 0 0;accent-color:var(--ink)}
 .effect-offer .action{width:100%;margin:7px 0}.effect-offer details{border-top:1px solid var(--line);margin-top:22px;padding-top:18px}
