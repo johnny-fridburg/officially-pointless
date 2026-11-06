@@ -3,6 +3,7 @@
 const catalog = Object.freeze(require('./product.json'));
 const {departmentConfig}=require('./department-access');
 const {backendConfig}=require('./instance-proxy');
+const {effectConfig,products:effectProducts}=require('./effects-proxy');
 const departmentCatalog=Object.freeze({sku:'department-collection',priceUsd:19,currency:'USD',kind:'online-department-collection'});
 const departmentUrl='https://fridburg.gumroad.com/l/department-collection';
 
@@ -16,7 +17,7 @@ const certificateCatalog=Object.freeze(certificateSlugs.map(slug=>Object.freeze(
 })));
 
 function getCommerceConfig(env = process.env) {
-  const departments=departmentConfig(env);
+  const departments=departmentConfig(env),effects=effectConfig(env);
   return {
     catalog,
     // Original bundle buyers retain their downloads/access. New sales use
@@ -24,9 +25,8 @@ function getCommerceConfig(env = process.env) {
     checkoutEnabled: false,
     checkoutUrl,
     departmentCollection:{catalog:departmentCatalog,checkoutEnabled:false,checkoutUrl:departmentUrl},
-    departmentProducts:departments.departmentProducts.map(({sku,checkoutUrl})=>({
-      catalog:Object.freeze({sku,priceUsd:19,currency:'USD',kind:'online-department'}),checkoutEnabled:false,checkoutUrl,
-    })),
+    departmentProducts:effects.products.filter(p=>p.sku.startsWith('department-')).map(({sku,purchaseEnabled,checkoutUrl})=>({catalog:Object.freeze({sku,priceUsd:19,currency:'USD',kind:'online-department'}),checkoutEnabled:purchaseEnabled,checkoutUrl})),
+    gameProducts:effects.products.filter(p=>p.sku.startsWith('game-')).map(({sku,purchaseEnabled,checkoutUrl})=>({catalog:Object.freeze({sku,priceUsd:19,currency:'USD',kind:'paid-game'}),checkoutEnabled:purchaseEnabled,checkoutUrl})),
     certificateProducts:certificateCatalog.map(catalog=>{
       const slug=catalog.sku.slice('certificate-'.length),name=slug.toUpperCase().replaceAll('-','_');
       const productId=env['GUMROAD_CERTIFICATE_'+name+'_PRODUCT_ID'];

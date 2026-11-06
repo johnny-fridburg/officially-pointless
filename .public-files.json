@@ -101,7 +101,17 @@
     "site/gifts/index.html",
     "site/gifts/create/index.html",
     "site/gifts/view/index.html",
-    "site/people/index.html"
+    "site/people/index.html",
+    "api/effect-products.json",
+    "api/effects-proxy.js",
+    "api/effects/function.json",
+    "api/effects/index.js",
+    "site/assets/effects.js",
+    "site/assets/effects.css",
+    "site/assets/effects/name-the-boss.png",
+    "site/games/name-the-boss/index.html",
+    "site/effects/index.html",
+    "site/effects/view/index.html"
   ],
   "assetSha256": {
     "site/assets/gift-kit-cover.png": "95031d942d58118d17198c5bb36f373fd686f7bf7139af23b640f94d8e9bacf8",
@@ -119,6 +129,7 @@
     "site/assets/certificates/secretary-of-one-more-coffee.png": "bc0b1fe80bcf2f25391c03f39eef34df0c328137f7d739533067634e35ff4fe0",
     "site/assets/certificates/director-of-unnecessary-meetings.png": "b63c6b0f7c8c4f09e3d87105732d62322c09adaad43f530c2b211dd68a656a69",
     "site/assets/certificates/chief-of-the-snack-drawer.png": "f0367366e9dca1ced6bd47e5bf8ceaa1c6dceccea1a1469abe14aafa53cfde8d",
-    "site/assets/certificates/commissioner-of-replying-tomorrow.png": "9dd2e88fda585acf62ed42290f790964ea2feb029d1f435657f9f151298c233c"
+    "site/assets/certificates/commissioner-of-replying-tomorrow.png": "9dd2e88fda585acf62ed42290f790964ea2feb029d1f435657f9f151298c233c",
+    "site/assets/effects/name-the-boss.png": "60b30ba326489ce766d977a5bf7b6f017077b8328c8868fe9669d8f9c34d111e"
   }
 }

@@ -5,6 +5,13 @@ const path = require('node:path');
 
 const requiredFiles = new Set([
   "assets/checkout.js",
+  "assets/effects.js",
+  "assets/effects.css",
+  "assets/effects/name-the-boss.png",
+  "games/name-the-boss/index.html",
+  "effects/index.html",
+  "effects/view/index.html",
+
   "assets/certificate-instances.js",
   "assets/gift-kit-cover.png",
   "contact/index.html",
