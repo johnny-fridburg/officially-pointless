@@ -7,6 +7,19 @@
   },
   "routes": [
     {
+      "route": "/api/*",
+      "methods": [
+        "OPTIONS"
+      ],
+      "statusCode": 204,
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Accept",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
       "route": "/pdf/*",
       "statusCode": 404
     },

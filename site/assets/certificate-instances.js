@@ -18,7 +18,7 @@
  function clearDownloads(){downloads.hidden=true;while(urls.length)URL.revokeObjectURL(urls.pop());
   for(const id of ['instance-png','instance-pdf'])document.getElementById(id).removeAttribute('href');}
  function invalidate(){revision++;pending?.abort();pending=null;token=null;deliverButton.disabled=true;
-  previewButton.disabled=false;image.src=sample;caption.textContent='Watermarked sample. Create a new preview for these names.';
+  previewButton.disabled=false;image.src=sample;caption.textContent='Example certificate. Create a new preview for these names.';
   clearDownloads();status.textContent='Create a watermarked preview for the names you want on your finished certificate.';}
  recipient.addEventListener('input',invalidate);giver.addEventListener('input',invalidate);
  async function request(payload){
