@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Secretary of One More Coffee — Officially Pointless</title>
-  <meta name="description" content="A single editable fictional certificate. One-time $19 USD. Sample images are public; personalize the purchased offline editor.">
+  <meta name="description" content="One finished fictional certificate, created on our server. One-time $19 USD. Watermarked previews; finished PNG and PDF after verified payment.">
   <link rel="canonical" href="https://officiallypointless.com/certificates/secretary-of-one-more-coffee/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Officially Pointless">
   <meta property="og:title" content="Secretary of One More Coffee — Officially Pointless">
-  <meta property="og:description" content="A single editable fictional certificate. One-time $19 USD. Sample images are public; personalize the purchased offline editor.">
+  <meta property="og:description" content="One finished fictional certificate, created on our server. One-time $19 USD. Watermarked previews; finished PNG and PDF after verified payment.">
   <meta property="og:url" content="https://officiallypointless.com/certificates/secretary-of-one-more-coffee/">
   <meta property="og:image" content="https://officiallypointless.com/assets/certificates/secretary-of-one-more-coffee.png">
   <meta property="og:image:alt" content="Sample fictional Secretary of One More Coffee certificate. Names are placeholders.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Secretary of One More Coffee — Officially Pointless">
-  <meta name="twitter:description" content="A single editable fictional certificate. One-time $19 USD. Sample images are public; personalize the purchased offline editor.">
+  <meta name="twitter:description" content="One finished fictional certificate, created on our server. One-time $19 USD. Watermarked previews; finished PNG and PDF after verified payment.">
   <meta name="twitter:image" content="https://officiallypointless.com/assets/certificates/secretary-of-one-more-coffee.png">
   <meta name="twitter:image:alt" content="Sample fictional Secretary of One More Coffee certificate. Names are placeholders.">
 
@@ -45,25 +45,40 @@ main{min-width:0;overflow-wrap:anywhere}
 
 <p class="eyebrow">Officially Pointless · Unnecessary Promotions</p>
 <h1>Secretary of One More Coffee</h1>
-<p class="lead">For keeping the department running. One completely essential cup at a time.</p>
+<p class="lead">Give them the title everyone already knows they deserve.</p>
 
 
 <div class="gift-layout">
-  <figure class="kit-example"><img src="/assets/certificates/secretary-of-one-more-coffee.png" alt="Sample fictional promotions artwork; this purchase includes only Secretary of One More Coffee"><figcaption>Sample presentation. Your purchase is one editable Secretary of One More Coffee certificate with your own recipient and giver names.</figcaption></figure>
+  <figure class="kit-example"><img id="instance-preview" src="/assets/certificates/secretary-of-one-more-coffee.png" alt="Watermarked preview of the fictional Secretary of One More Coffee certificate"><figcaption id="instance-caption">Watermarked sample. Preview your own names below.</figcaption></figure>
   <section class="kit-offer">
-    <h2>One title. Make it theirs.</h2>
+    <h2>One title. One finished gift.</h2>
     <p class="price">$19 USD <span>one-time purchase</span></p>
-    <p>Receive one editable certificate file for <strong>Secretary of One More Coffee</strong>. Type the recipient and giver, then download your personalized PNG or SVG, or print / save PDF.</p>
+    <p>We create your <strong>Secretary of One More Coffee</strong> certificate on our server. Your purchase delivers one finished PNG and print-ready PDF with your recipient and giver names.</p>
+    <form id="instance-form" data-instance-sku="certificate-secretary-of-one-more-coffee">
+      <p><label for="instance-recipient">Recipient name</label><br><input id="instance-recipient" name="recipient" type="text" autocomplete="off" maxlength="60" required></p>
+      <p><label for="instance-giver">Given by</label><br><input id="instance-giver" name="giver" type="text" autocomplete="off" maxlength="60" required></p>
+      <p class="fine">Up to 60 characters per name. This first edition supports Latin letters, numbers and ordinary punctuation.</p>
+      <button id="instance-preview-button" class="action" type="submit">Create watermarked preview</button>
+      <p id="instance-status" class="fine" role="status" aria-live="polite">Previews carry a large watermark. Finished downloads require verified payment.</p>
+    </form>
     <button id="checkout-button" data-checkout-sku="certificate-secretary-of-one-more-coffee" class="action" type="button" disabled>Checkout is not open yet</button>
     <p id="checkout-status" class="fine" role="status" aria-live="polite">Checking this certificate’s purchase availability…</p>
-    <p class="fine">Gumroad handles payment and delivery when this product is available.</p>
+    <details><summary>Already purchased? Get your finished certificate.</summary>
+      <form id="instance-delivery-form">
+        <p><label for="instance-license">Purchase key from your Gumroad receipt</label><br><input id="instance-license" type="password" autocomplete="off" spellcheck="false" maxlength="128" required></p>
+        <p class="fine">Create your preview first, then verify your key. Submitting your verified key creates the finished certificate and fixes these names for this purchase. To download again, use the same names and key.</p>
+        <button id="instance-deliver-button" class="action" type="submit" disabled>Verify payment and create finished files</button>
+      </form>
+    </details>
+    <div id="instance-downloads" hidden><p>Your finished certificate is ready.</p><p><a id="instance-png" class="action">Download finished PNG</a> <a id="instance-pdf" class="action">Download print-ready PDF</a></p></div>
   </section>
 </div>
-<section class="kit-section"><h2>Your certificate, your names.</h2>
-<ol class="how-it-works"><li><h3>Purchase this title.</h3><p>This purchase includes the title shown above.</p></li><li><h3>Open your certificate.</h3><p>Download EDIT-YOUR-CERTIFICATE.html and open it in a desktop browser. Enter the recipient and giver names; the preview changes as you type.</p></li><li><h3>Save or print.</h3><p>Download a personalized PNG or SVG. For PDF, use Print / save personalized PDF and choose A4 landscape.</p></li></ol>
-<p>Works offline after download. No physical item is included. Fictional novelty artwork grants no real office, qualification or authority. Personal gifting only; the license is included in the file.</p>
+<section class="kit-section"><h2>A gift made for this person.</h2>
+<ol class="how-it-works"><li><h3>Preview your names.</h3><p>Our server creates an image with a huge watermark across the artwork.</p></li><li><h3>Purchase this title.</h3><p>When checkout is open, Gumroad handles the $19 payment and gives you a purchase key.</p></li><li><h3>Receive the finished gift.</h3><p>We verify your payment and create your finished PNG and image-only PDF. Print the PDF on A4 landscape or send the finished image to your recipient.</p></li></ol>
+<p>One finished certificate per purchase. Personal gifting only. No physical item is included. Fictional novelty artwork grants no real office, qualification or authority.</p>
 <p><a href="/gift-kit/">Choose a different certificate</a> · <a href="/sales-status/">Purchase and refund information</a></p></section>
-<script src="/assets/checkout.js" defer></script>
+<section class="kit-section"><p class="eyebrow">Recognition with an audience</p><h2>Make their distinction part of the place.</h2><p>Your finished honor is ready to display or share. New public gifting is currently closed. Once its finished-instance connection is accepted, a purchase can grant one public honor for the same issued recipient, with their permission.</p><p>Removing that public honor will not grant a different recipient or another honor. Public hosting lasts while the service operates, subject to moderation and removal. No audience size, ranking or real-world authority is promised.</p><p><a href="/gifts/">View existing public honors and collections</a></p></section>
+<script src="/assets/checkout.js" defer></script><script src="/assets/certificate-instances.js" defer></script>
 
   </main>
   <footer>

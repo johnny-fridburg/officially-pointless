@@ -219,8 +219,11 @@ const certificates=[
 const certificateNames=certificates.flatMap(([,name])=>[
   `GUMROAD_CERTIFICATE_${name}_PRODUCT_ID`,`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`,
   `POINTLESS_CERTIFICATE_${name}_ACCEPTED`,`POINTLESS_CERTIFICATE_${name}_CHECKOUT_ENABLED`,
+  `POINTLESS_INSTANCE_${name}_ACCEPTED`,
 ]);
+const instanceEnv={POINTLESS_INSTANCE_BACKEND_URL:'https://officially-pointless-instances.azurewebsites.net',POINTLESS_INSTANCE_BACKEND_KEY:'k'.repeat(64)};
 const certificateEnv={POINTLESS_SELLER_ACCEPTED:'true',
+  ...instanceEnv,POINTLESS_INSTANCE_MINISTER_OF_UNOPENED_TABS_ACCEPTED:'true',
   GUMROAD_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_PRODUCT_ID:'fixture-certificate-product',
   GUMROAD_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_CHECKOUT_URL:'https://fridburg.gumroad.com/l/pointless-minister-of-unopened-tabs',
   POINTLESS_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_ACCEPTED:'true',
@@ -238,7 +241,7 @@ const museumEnv = {
   POINTLESS_DEPARTMENT_MUSEUM_CHECKOUT_ENABLED: 'true',
 };
 async function withProductEnv(values, action) {
-  const names = [...new Set([...Object.keys(departmentEnv), ...individualNames, ...certificateNames])];
+  const names = [...new Set([...Object.keys(departmentEnv), ...individualNames, ...certificateNames,...Object.keys(instanceEnv)])];
   const original = Object.fromEntries(names.map(name => [name, process.env[name]]));
   for (const name of names) {
     if (values[name] === undefined) delete process.env[name];
@@ -264,18 +267,15 @@ test('status lists ten individually closed products without private verification
   });
 });
 
-test('an accepted individual checkout opens only its exact SKU and provider destination', async () => {
+test('obsolete department acceptance never opens sales before a finished product exists', async () => {
   await withCommerceEnv({}, () => withProductEnv(museumEnv, async () => {
     const result = await callStatus();
     assert.equal(result.body.checkoutEnabled, false);
     assert.equal(result.body.departmentCollection.checkoutEnabled, false);
-    assert.equal(result.body.departmentProducts?.filter(product => product.checkoutEnabled).length, 1);
+    assert.equal(result.body.departmentProducts?.filter(product => product.checkoutEnabled).length, 0);
     const opened = await callCheckout({sku: 'department-museum'});
-    assert.equal(opened.status, 200);
-    assert.deepEqual(opened.body, {
-      checkoutUrl: 'https://fridburg.gumroad.com/l/pointless-museum',
-      sku: 'department-museum', priceUsd: 19, currency: 'USD', fulfillment: 'gumroad',
-    });
+    assert.equal(opened.status, 503);
+    assert.deepEqual(opened.body, {error:'checkout_not_open'});
     assert.equal((await callCheckout({sku: 'department-silence'})).status, 503);
     assert.equal((await callCheckout({sku: 'department-collection'})).status, 503);
     for (const sku of ['department-unknown', 'department-museum?paid=true', 'department-collection/museum', '__proto__', 'constructor']) {
@@ -290,7 +290,7 @@ test('an accepted individual checkout opens only its exact SKU and provider dest
   }));
 });
 
-test('each individual product uses a separate accepted product ID and exact pointless permalink', async () => {
+test('all departments remain closed even with individually accepted legacy provider settings', async () => {
   for (const [slug, name] of individualProducts) {
     const destination = `https://fridburg.gumroad.com/l/pointless-${slug}`;
     const env = {...museumEnv,
@@ -302,9 +302,8 @@ test('each individual product uses a separate accepted product ID and exact poin
     };
     await withProductEnv(env, async () => {
       const opened = await callCheckout({sku: `department-${slug}`});
-      assert.equal(opened.status, 200, slug);
-      assert.equal(opened.body.checkoutUrl, destination, slug);
-      assert.equal(opened.body.sku, `department-${slug}`);
+      assert.equal(opened.status, 503, slug);
+      assert.equal(opened.body.error, 'checkout_not_open');
     });
   }
 });
@@ -425,7 +424,8 @@ test('accepted certificate checkout returns only the selected single-title produ
 
 test('each certificate checkout requires its exact accepted product, seller and provider destination',async()=>{
   for(const [slug,name]of certificates){
-    const env={POINTLESS_SELLER_ACCEPTED:'true',
+    const env={POINTLESS_SELLER_ACCEPTED:'true',...instanceEnv,
+      [`POINTLESS_INSTANCE_${name}_ACCEPTED`]:'true',
       [`GUMROAD_CERTIFICATE_${name}_PRODUCT_ID`]:'fixture-'+slug,
       [`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`]:'https://fridburg.gumroad.com/l/pointless-'+slug,
       [`POINTLESS_CERTIFICATE_${name}_ACCEPTED`]:'true',

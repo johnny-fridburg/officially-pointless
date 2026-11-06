@@ -2,7 +2,6 @@
 const {randomBytes,createHash,timingSafeEqual}=require('node:crypto');
 const departments=require('./departments.json');
 const {credentialHash,validLicense}=require('./department-access');
-const {renderGift}=require('./department-gift');
 const {MAX_BYTES,readPaidState,productSlotUsed,productCount,pruneReceipts,publicationLimited}=require('./paid-state');
 const ORIGINS=new Set(['https://officiallypointless.com','https://www.officiallypointless.com']);
 const RESPONSE_HEADERS={'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
@@ -37,13 +36,14 @@ function grantedDepartments(grant){
     grant.departments.some(slug=>!departments.some(department=>department.slug===slug)))throw error('payment_required',402);
   return departments.filter(department=>grant.departments.includes(department.slug));
 }
-function createDepartmentHandler({enabled=false,removalEnabled=enabled,store,verifyLicense,adminToken=null,now=Date.now}={}){
+function createDepartmentHandler({enabled=false,removalEnabled=enabled,store,verifyLicense,adminToken=null,now=Date.now,renderGift=null}={}){
   const open=Boolean(enabled&&store&&verifyLicense);
   const removalOpen=Boolean(removalEnabled&&store);
   return async(context,req)=>{
     const respond=(status,body,headers={})=>context.res={status,headers:{...RESPONSE_HEADERS,...headers},body};
     const action=req?.params?.action;
     if(action==='status'&&req.method==='GET'){respond(200,{enabled:open,removalEnabled:removalOpen});return;}
+    if(action==='gift'&&typeof renderGift!=='function'){respond(503,{error:'paid_access_not_open'});return;}
     if(!open&&!(action==='remove'&&removalOpen)){respond(503,{error:'paid_access_not_open'});return;}
     if(!['access','gift','publish','presence','remove'].includes(action)){respond(404,{error:'unknown_action'});return;}
     if(req.method!==(action==='presence'?'GET':'POST')){respond(405,{error:'method_not_allowed'});return;}

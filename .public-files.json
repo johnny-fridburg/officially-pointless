@@ -1,5 +1,10 @@
 {
   "files": [
+    "api/instance-proxy.js",
+    "api/instance-proxy.test.js",
+    "api/certificates/index.js",
+    "api/certificates/function.json",
+    "site/assets/certificate-instances.js",
     ".githooks/pre-commit",
     ".githooks/pre-push",
     ".github/workflows/azure.yml",
@@ -41,7 +46,6 @@
     "test/checkout-ui.test.js",
     "api/department-access.js",
     "api/department-service.js",
-    "api/department-gift.js",
     "api/departments.json",
     "api/departments.test.js",
     "api/departments/index.js",
@@ -98,21 +102,21 @@
     "site/people/index.html"
   ],
   "assetSha256": {
-    "site/assets/gift-kit-cover.png": "b99b3f985d325794545e81bf3488917df6ef97142f3058d87bf0761991b67fdd",
-    "site/assets/departments/make-it-worse.png": "5807bbf23cef50e7d4b40d83f069d4cfb2716f1a820394a7ee83c7639ba932cb",
-    "site/assets/departments/silence.png": "23a64fe8b4b9bc4cc1eaf2185755eb493c0b7bee5c2dd4c10511851e37716ec7",
-    "site/assets/departments/loading.png": "3928001d40e06f14a6c7e0ec01745f28f9d11be75cd112b29669e194dba837d5",
-    "site/assets/departments/last-word.png": "3a1568313a761cc1c398691665ef243cf04335a2bc7180ba5c8e059fe4b32a01",
-    "site/assets/departments/museum.png": "57d4c605ba2ac52b33d28f20e6f4f6a23b28d44de99d260d91ddca66f0c38bd4",
-    "site/assets/departments/golden-error.png": "9842596aee76394f4d4e1df82da19daf2897fe50637e053567f87c39684c230a",
-    "site/assets/departments/button.png": "7e87c2ae530b6291288d51f234afff3f171da9088286bd8aac7dc59876462ef6",
-    "site/assets/departments/empty-wing.png": "65cc84382a7d897b632de88a8944f28bd2dcda6fe710526fd78880dd8c8bc6a6",
-    "site/assets/departments/unnecessary-ribbon.png": "1247af743b071000e2050efaed8d35ee2be8350466ba0825450d209e1659d325",
-    "site/assets/departments/invisible-monument.png": "f6f9b84ef5f38725ded5d6cf3becbb59a949afa09c21cf0341c474499f87103a",
-    "site/assets/certificates/minister-of-unopened-tabs.png": "95031d942d58118d17198c5bb36f373fd686f7bf7139af23b640f94d8e9bacf8",
-    "site/assets/certificates/secretary-of-one-more-coffee.png": "bc0b1fe80bcf2f25391c03f39eef34df0c328137f7d739533067634e35ff4fe0",
-    "site/assets/certificates/director-of-unnecessary-meetings.png": "b63c6b0f7c8c4f09e3d87105732d62322c09adaad43f530c2b211dd68a656a69",
-    "site/assets/certificates/chief-of-the-snack-drawer.png": "f0367366e9dca1ced6bd47e5bf8ceaa1c6dceccea1a1469abe14aafa53cfde8d",
-    "site/assets/certificates/commissioner-of-replying-tomorrow.png": "9dd2e88fda585acf62ed42290f790964ea2feb029d1f435657f9f151298c233c"
+    "site/assets/gift-kit-cover.png": "cbf319c87fb5957990e35ba8469162231cc42b9cdcb6c155de3a621806e259f1",
+    "site/assets/departments/make-it-worse.png": "0f77e83796fe47299f3771eed48315a7730b257b2642ffe8088c7e82772d2830",
+    "site/assets/departments/silence.png": "17490f3c7f095e234b25ce704ccbe3481c5cc7d656a989e3b6dfc08c434ee9a5",
+    "site/assets/departments/loading.png": "4f881bdbe6af6fcecc11010fe7a2a08e80773683cef039f2c622d5995ba9185a",
+    "site/assets/departments/last-word.png": "9c4554ca0d1a7355e2adc07fde26f5e56bdfe818dd84d140c0196a1c1a80427c",
+    "site/assets/departments/museum.png": "8e2fefaf83eb294204739fec303099484550063fe37281642397f1077de4aa09",
+    "site/assets/departments/golden-error.png": "5858fda18e368f305da23c430dca621014f6bbd71fda17a017f01ed90b99fe03",
+    "site/assets/departments/button.png": "223a81a5176e7517cf34c7a769e4dff61c09b083d7564e7da7e451a6b27d9d8b",
+    "site/assets/departments/empty-wing.png": "40f88aa8b55466a9e119fbddf7c8c2df7b33242da5b02aa5c1740c5e3bb5aab2",
+    "site/assets/departments/unnecessary-ribbon.png": "73e4c3d62584a2f6f1c143a1684b5a3a0d9dd1ec1bfd88d3e2b36c435bb5a267",
+    "site/assets/departments/invisible-monument.png": "22e933550be1d591763612c3a8a4c9eef367768d22d714ade9913ff42cb55af8",
+    "site/assets/certificates/minister-of-unopened-tabs.png": "cbf319c87fb5957990e35ba8469162231cc42b9cdcb6c155de3a621806e259f1",
+    "site/assets/certificates/secretary-of-one-more-coffee.png": "c9297dedcc350edd0c069fe6e93c2458951c02e772a2542de52350748fafa26c",
+    "site/assets/certificates/director-of-unnecessary-meetings.png": "24e0332109a9ce38b6f7c4e84b191b4360ab1eba8531d511cf94a2ae52cbe8a4",
+    "site/assets/certificates/chief-of-the-snack-drawer.png": "a441c29750257b15d04a5258cbc8f72312a0f16b3276e3ce76baff21376dd230",
+    "site/assets/certificates/commissioner-of-replying-tomorrow.png": "6ad39439bb4bd90fc058a3b68443613946b7eaed13da41a2cc0dfcbb7fc38165"
   }
 }
