@@ -32,9 +32,9 @@ function getCommerceConfig(env = process.env) {
       const productId=env['GUMROAD_CERTIFICATE_'+name+'_PRODUCT_ID'];
       const checkoutUrl='https://fridburg.gumroad.com/l/pointless-'+slug;
       const checkoutEnabled=Boolean(backendConfig(env)&&env['POINTLESS_INSTANCE_'+name+'_ACCEPTED']==='true'&&env.POINTLESS_SELLER_ACCEPTED==='true'&&
-        env['POINTLESS_CERTIFICATE_'+name+'_ACCEPTED']==='true'&&env['POINTLESS_CERTIFICATE_'+name+'_CHECKOUT_ENABLED']==='true'&&
+        env['POINTLESS_CERTIFICATE_'+name+'_ACCEPTED']==='true'&&env['POINTLESS_CERT_'+name+'_CHECKOUT']==='true'&&
         typeof productId==='string'&&productId.length>0&&productId.length<=128&&!/[\s\x00-\x1f\x7f]/.test(productId)&&
-        env['GUMROAD_CERTIFICATE_'+name+'_CHECKOUT_URL']===checkoutUrl);
+        env['GUMROAD_CERT_'+name+'_CHECKOUT_URL']===checkoutUrl);
       return {catalog,checkoutEnabled,checkoutUrl};
     }),
   };

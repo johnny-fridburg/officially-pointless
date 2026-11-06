@@ -217,17 +217,17 @@ const certificates=[
   ['commissioner-of-replying-tomorrow','COMMISSIONER_OF_REPLYING_TOMORROW'],
 ];
 const certificateNames=certificates.flatMap(([,name])=>[
-  `GUMROAD_CERTIFICATE_${name}_PRODUCT_ID`,`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`,
-  `POINTLESS_CERTIFICATE_${name}_ACCEPTED`,`POINTLESS_CERTIFICATE_${name}_CHECKOUT_ENABLED`,
+  `GUMROAD_CERTIFICATE_${name}_PRODUCT_ID`,`GUMROAD_CERT_${name}_CHECKOUT_URL`,
+  `POINTLESS_CERTIFICATE_${name}_ACCEPTED`,`POINTLESS_CERT_${name}_CHECKOUT`,
   `POINTLESS_INSTANCE_${name}_ACCEPTED`,
 ]);
 const instanceEnv={POINTLESS_INSTANCE_BACKEND_URL:'https://officially-pointless-instances.azurewebsites.net',POINTLESS_INSTANCE_BACKEND_KEY:'k'.repeat(64)};
 const certificateEnv={POINTLESS_SELLER_ACCEPTED:'true',
   ...instanceEnv,POINTLESS_INSTANCE_MINISTER_OF_UNOPENED_TABS_ACCEPTED:'true',
   GUMROAD_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_PRODUCT_ID:'fixture-certificate-product',
-  GUMROAD_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_CHECKOUT_URL:'https://fridburg.gumroad.com/l/pointless-minister-of-unopened-tabs',
+  GUMROAD_CERT_MINISTER_OF_UNOPENED_TABS_CHECKOUT_URL:'https://fridburg.gumroad.com/l/pointless-minister-of-unopened-tabs',
   POINTLESS_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_ACCEPTED:'true',
-  POINTLESS_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_CHECKOUT_ENABLED:'true',
+  POINTLESS_CERT_MINISTER_OF_UNOPENED_TABS_CHECKOUT:'true',
 };
 const museumEnv = {
   ...departmentEnv,
@@ -435,10 +435,11 @@ test('each certificate checkout requires its exact accepted product, seller and 
     const env={POINTLESS_SELLER_ACCEPTED:'true',...instanceEnv,
       [`POINTLESS_INSTANCE_${name}_ACCEPTED`]:'true',
       [`GUMROAD_CERTIFICATE_${name}_PRODUCT_ID`]:'fixture-'+slug,
-      [`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`]:'https://fridburg.gumroad.com/l/pointless-'+slug,
+      [`GUMROAD_CERT_${name}_CHECKOUT_URL`]:'https://fridburg.gumroad.com/l/pointless-'+slug,
       [`POINTLESS_CERTIFICATE_${name}_ACCEPTED`]:'true',
-      [`POINTLESS_CERTIFICATE_${name}_CHECKOUT_ENABLED`]:'true',
+      [`POINTLESS_CERT_${name}_CHECKOUT`]:'true',
     };
+    for(const setting of Object.keys(env))assert.ok(setting.length<=64,'Azure app setting exceeds its 64-character limit: '+setting);
     await withProductEnv(env,async()=>{
       const response=await callCheckout({sku:'certificate-'+slug});
       assert.equal(response.status,200,slug);
@@ -449,8 +450,8 @@ test('each certificate checkout requires its exact accepted product, seller and 
       assert.equal(result.status,503,setting);
       assert.equal(result.body.error,'checkout_not_open');
     });
-    for(const destination of [checkoutUrl,departmentUrl,env[`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`]+'?paid=true','https://fridburg.gumroad.com.evil.invalid/l/pointless-'+slug]) {
-      await withProductEnv({...env,[`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`]:destination},async()=>{
+    for(const destination of [checkoutUrl,departmentUrl,env[`GUMROAD_CERT_${name}_CHECKOUT_URL`]+'?paid=true','https://fridburg.gumroad.com.evil.invalid/l/pointless-'+slug]) {
+      await withProductEnv({...env,[`GUMROAD_CERT_${name}_CHECKOUT_URL`]:destination},async()=>{
         assert.equal((await callCheckout({sku:'certificate-'+slug})).status,503);
       });
     }
