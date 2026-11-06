@@ -1,14 +1,14 @@
 'use strict';
 
 const { getCommerceConfig } = require('../catalog');
-const {commerceRequest} = require('../commerce-origins');
+const {commerceRequest,commerceBody} = require('../commerce-origins');
 
 module.exports = async function (context, req) {
   const policy = commerceRequest(req, 'POST');
   if (policy.status) { context.res = policy; return; }
   const respond = (status, body) => { context.res = {status, headers: policy.headers, body}; };
 
-  const body = req.body;
+  const body = commerceBody(req);
   if (!body || typeof body !== 'object' || Array.isArray(body) ||
       Object.keys(body).length !== 1 || typeof body.sku !== 'string') {
     respond(400, { error: 'invalid_request' });

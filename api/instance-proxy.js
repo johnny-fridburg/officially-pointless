@@ -1,5 +1,5 @@
 'use strict';
-const {commerceRequest}=require('./commerce-origins');
+const {commerceRequest,commerceBody}=require('./commerce-origins');
 const {instanceRequest}=require('./instance-transport');
 const products=require('./gift-products.json').filter(p=>p.kind==='digital-certificate');
 const skus=new Set(products.map(p=>p.sku));
@@ -27,7 +27,7 @@ function createInstanceProxy({env=process.env,request=instanceRequest}={}){
  return async(context,req)=>{
   const policy=commerceRequest(req,'POST');if(policy.status){context.res=policy;return;}
   const respond=(status,body)=>{context.res={status,headers:policy.headers,body};};
-  const body=req.body;
+  const body=commerceBody(req);
   if(!object(body)||Buffer.byteLength(JSON.stringify(body))>4096){respond(400,{error:'invalid_request'});return;}
   const action=body.action;
   const valid=action==='preview'?exact(body,['action','sku','recipient','giver'])&&skus.has(body.sku)&&text(body.recipient,60)&&text(body.giver,60):

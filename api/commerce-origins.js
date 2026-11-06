@@ -39,4 +39,11 @@ function commerceRequest(req, method) {
   return {status: 204, headers};
 }
 
-module.exports = {commerceRequest};
+function commerceBody(req){
+  if(typeof req?.body!=='string')return req?.body;
+  const type=header(req.headers,'content-type');
+  if(!type.valid||typeof type.value!=='string'||!/^text\/plain(?:;\s*charset=utf-8)?$/i.test(type.value)||Buffer.byteLength(req.body)>4096)return null;
+  try{return JSON.parse(req.body);}catch{return null;}
+}
+
+module.exports = {commerceRequest,commerceBody};

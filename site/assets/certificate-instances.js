@@ -23,7 +23,7 @@
  recipient.addEventListener('input',invalidate);giver.addEventListener('input',invalidate);
  async function request(payload){
   const controller=new AbortController();pending=controller;const timer=setTimeout(()=>controller.abort(),35000);
-  try{const response=await fetch(apiBase+'/api/certificates',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
+  try{const response=await fetch(apiBase+'/api/certificates',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8',Accept:'application/json'},
     credentials:'omit',cache:'no-store',body:JSON.stringify(payload),signal:controller.signal});
    const data=await response.json();if(!response.ok)throw Error(messages[data?.error]||'The certificate service is temporarily unavailable. Try again shortly.');return data;
   }finally{clearTimeout(timer);}

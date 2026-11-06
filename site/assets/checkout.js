@@ -118,7 +118,7 @@
       try {
         const response = await fetch(apiBase+'/api/billing/checkout', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+          headers: {'Content-Type': 'text/plain;charset=UTF-8', Accept: 'application/json'},
           credentials: 'omit',
           cache: 'no-store',
           body: JSON.stringify({sku})

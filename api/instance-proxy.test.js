@@ -58,3 +58,17 @@ test('internal public-honor proof matches the authoritative issued recipient wit
  assert.equal(context.res.status,400);
 });
 
+test('browser-safe text JSON is parsed strictly after origin validation',async()=>{
+ const handler=createInstanceProxy({env,request:async(url,options)=>{
+  assert.deepEqual(JSON.parse(options.body),{sku,recipient:'Alex',giver:'Sam'});
+  return new Response(JSON.stringify({preview:'data:image/png;base64,'+png,instance:'signed-preview-token'}));
+ }});
+ const raw=JSON.stringify({action:'preview',sku,recipient:'Alex',giver:'Sam'});
+ const c={};await handler(c,{...req(raw),headers:{origin:'https://promotions.officiallypointless.com','content-type':'text/plain;charset=UTF-8'}});
+ assert.equal(c.res.status,200);
+ for(const body of [raw.slice(1),JSON.stringify({action:'preview',sku,recipient:'Alex',giver:'Sam',paid:true})]){
+  const bad={};await handler(bad,{...req(body),headers:{origin:'https://promotions.officiallypointless.com','content-type':'text/plain;charset=UTF-8'}});assert.equal(bad.res.status,400);
+ }
+ const foreign={};await handler(foreign,{...req(raw),headers:{origin:'https://evil.example','content-type':'text/plain'}});assert.equal(foreign.res.status,403);
+});
+

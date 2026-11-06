@@ -403,6 +403,14 @@ test('status exposes five separately priced certificates with purchases closed b
   });
 });
 
+test('browser-safe text checkout payload still uses only the fixed SKU and closed server gates',async()=>{
+ await withProductEnv({},async()=>{
+  const response=await callCheckout(JSON.stringify({sku:'certificate-minister-of-unopened-tabs'}),{headers:{origin:'https://promotions.officiallypointless.com','content-type':'text/plain;charset=UTF-8'}});
+  assert.equal(response.status,503);assert.equal(response.body.error,'checkout_not_open');
+  assert.equal((await callCheckout(JSON.stringify({sku:'certificate-minister-of-unopened-tabs',paid:true}),{headers:{origin:'https://promotions.officiallypointless.com','content-type':'text/plain'}})).status,400);
+ });
+});
+
 test('accepted certificate checkout returns only the selected single-title product',async()=>{
   await withProductEnv(certificateEnv,async()=>{
     const response=await callCheckout({sku:'certificate-minister-of-unopened-tabs'},{headers:{origin:'https://promotions.officiallypointless.com'}});
