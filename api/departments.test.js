@@ -38,10 +38,10 @@ test('closed handler rejects all activity calls even with forged payment queries
 });
 test('payment is verified again on each access, gift and publication request',async()=>{
  let count=0;const verify=verifier({},async()=>{count++;return new Response(JSON.stringify({success:count===1,purchase:purchase()}));});const {handler,store}=setup({verifyLicense:verify});
- assert.equal((await call(handler,'access')).status,200);assert.equal((await call(handler,'gift',input())).status,402);assert.equal((await call(handler,'publish',input())).status,402);assert.equal(store.state,null);assert.equal(count,3);
+ assert.equal((await call(handler,'access')).status,200);assert.equal((await call(handler,'gift',input())).status,503);assert.equal((await call(handler,'publish',input())).status,402);assert.equal(store.state,null);assert.equal(count,2);
 });
-test('all ten private gifts contain literal personalization and distinct offline activities without credentials or network dependencies',async()=>{
- const {handler,store}=setup();for(const d of departments){const response=await call(handler,'gift',input(d.slug,{name:'Alex <script>alert(1)</script>',text:'<img src=x onerror=alert(1)>'}));assert.equal(response.status,200,d.slug);assert.match(response.body.filename,/^[a-z-]+-gift\.html$/);const html=response.body.html;assert(html.includes(d.name));assert(html.includes('Alex &lt;script&gt;alert(1)&lt;/script&gt;'));assert(html.includes('&lt;img src=x onerror=alert(1)&gt;'));assert(!html.includes(KEY));assert(!html.includes('<img src=x'));assert(!/fetch\(|https?:\/\/|<(?:script|img|iframe)\b[^>]*\bsrc=/.test(html));assert(html.includes('@media print'));assert(html.includes(d.private));}
+test('no department can deliver editable HTML even through an enabled legacy handler',async()=>{
+ const {handler,store}=setup();for(const d of departments){const response=await call(handler,'gift',input(d.slug));assert.equal(response.status,503,d.slug);assert.deepEqual(response.body,{error:'paid_access_not_open'});}
  assert.equal(store.state,null,'Private gifts must never publish');
 });
 test('every department publishes an independently readable record with no ownership, receipt or gift-giver leak',async()=>{
@@ -61,12 +61,12 @@ test('another key cannot remove a record; verified original key removes after pr
  advance(11000);assert.equal((await call(handler,'publish',input('last-word',{requestId:'11111111-1111-1111-1111-111111111111'}))).status,201);
 });
 test('unknown fields, empty names, control text, bad theme and oversized payloads never publish or create gifts',async()=>{
- const {handler,store}=setup();for(const extra of [{name:' '},{name:'A'.repeat(71)},{text:'bad\u0000text'},{text:'A'.repeat(241)},{theme:'javascript:evil'},{photo:'not supported'},{department:'unknown'}])for(const action of ['gift','publish'])assert.equal((await call(handler,action,input('museum',extra))).status,400);assert.equal(store.state,null);
+ const {handler,store}=setup();for(const extra of [{name:' '},{name:'A'.repeat(71)},{text:'bad\u0000text'},{text:'A'.repeat(241)},{theme:'javascript:evil'},{photo:'not supported'},{department:'unknown'}])assert.equal((await call(handler,'publish',input('museum',extra))).status,400);assert.equal(store.state,null);
 });
 test('cross-origin, originless, wrong methods and unknown actions fail before provider or storage',async()=>{
  let calls=0;const {handler}=setup({verifyLicense:async()=>{calls++;throw Error('should not call');}});
- for(const origin of ['https://evil.invalid',''])assert.equal((await call(handler,'gift',input(),KEY,'POST',origin)).status,403);
- assert.equal((await call(handler,'gift',input(),KEY,'GET')).status,405);assert.equal((await call(handler,'unknown',input())).status,404);assert.equal(calls,0);
+ for(const origin of ['https://evil.invalid',''])assert.equal((await call(handler,'publish',input(),KEY,'POST',origin)).status,403);
+ assert.equal((await call(handler,'publish',input(),KEY,'GET')).status,405);assert.equal((await call(handler,'unknown',input())).status,404);assert.equal(calls,0);
 });
 test('public capacity failure preserves existing links and storage errors reveal no secrets',async()=>{
  const {handler,store}=setup();const first=await call(handler,'publish',input('museum'));
@@ -74,8 +74,8 @@ test('public capacity failure preserves existing links and storage errors reveal
  const other=setup({store}, {sale_id:'other-sale'}).handler;assert.equal((await call(other,'publish',input('museum'))).status,409);assert.equal((await call(handler,'presence',{},'', 'GET',undefined,{id:first.body.record.id})).status,200);
  const broken=setup({store:{read:async()=>{throw Error('private SAS');}}}).handler;const failed=await call(broken,'presence',{},'', 'GET',undefined,{id:first.body.record.id});assert.equal(failed.status,503);assert(!JSON.stringify(failed).includes('private SAS'));
 });
-test('publication cooldown does not block gift creation and creates no fictitious records',async()=>{
- const {handler,store}=setup();assert.equal((await call(handler,'publish',input('museum'))).status,201);assert.equal((await call(handler,'publish',input('button'))).status,429);assert.equal((await call(handler,'gift',input('button'))).status,200);assert.equal(store.state.records.length,1);
+test('retired gift generation creates no fictitious records alongside publication cooldown',async()=>{
+ const {handler,store}=setup();assert.equal((await call(handler,'publish',input('museum'))).status,201);assert.equal((await call(handler,'publish',input('button'))).status,429);assert.equal((await call(handler,'gift',input('button'))).status,503);assert.equal(store.state.records.length,1);
 });
 test('deployed boundary requires every acceptance setting and a separate durable store',async()=>{
  assert.equal(typeof access.departmentConfig,'function','Closed department configuration is missing');
@@ -153,7 +153,7 @@ test('individual access lists only its department and its own scoped public reco
 test('individual keys cannot create gifts or publish into any other department',async()=>{
   const {handler,store}=setup({verifyLicense:museumVerifier()});
   for(const d of departments.filter(d=>d.slug!=='museum')) {
-    for(const action of ['gift','publish']) {
+    for(const action of ['publish']) {
       const result=await call(handler,action,input(d.slug));
       assert.equal(result.status,403,`${action} ${d.slug}`);
       assert.equal(result.body.error,'department_not_purchased');
@@ -163,15 +163,15 @@ test('individual keys cannot create gifts or publish into any other department',
   }
   assert.equal(store.state,null);
   const allowed=await call(handler,'gift',input('museum',{name:'Riley'}));
-  assert.equal(allowed.status,200);
-  assert.match(allowed.body.html,/Presented to Riley/);
+  assert.equal(allowed.status,503);
+  assert.equal(allowed.body.html,undefined);
 });
 
 test('an empty explicit entitlement cannot fall back to collection access',async()=>{
   const base=await verifier()(KEY);
   const {handler,store}=setup({verifyLicense:async()=>({...base,departments:[]})});
   assert.equal((await call(handler,'access')).status,402);
-  assert.equal((await call(handler,'gift',input('museum'))).status,402);
+  assert.equal((await call(handler,'gift',input('museum'))).status,503);
   assert.equal(store.state,null);
 });
 
@@ -244,6 +244,7 @@ test('original individual keys and operators can remove stored pages while new p
 
 test('product storefront origins cannot submit purchase keys or create department outputs',async()=>{
   let calls=0;const {handler}=setup({verifyLicense:async()=>{calls++;throw Error('must not verify');}});
-  for(const action of ['access','gift','publish','remove'])assert.equal((await call(handler,action,input('museum'),KEY,'POST','https://museum.officiallypointless.com')).status,403);
+  for(const action of ['access','publish','remove'])assert.equal((await call(handler,action,input('museum'),KEY,'POST','https://museum.officiallypointless.com')).status,403);
+  assert.equal((await call(handler,'gift',input('museum'),KEY,'POST','https://museum.officiallypointless.com')).status,503);
   assert.equal(calls,0);
 });

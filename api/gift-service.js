@@ -50,8 +50,8 @@ function boards(gifts){
     .sort((a,b)=>b.recipientCount-a.recipientCount||a.sku.localeCompare(b.sku));
   return {people,products:productBoard,stats:{giftCount:gifts.length,recipientCount:recipients.size}};
 }
-function createPublicGiftHandler({enabled=false,store,verifyLicense,adminToken=null,now=Date.now}={}){
-  const creationEnabled=Boolean(enabled&&store&&typeof verifyLicense==='function'),publicReadEnabled=Boolean(store);
+function createPublicGiftHandler({enabled=false,store,verifyLicense,verifyRemovalLicense=verifyLicense,verifyIssuedCertificate=null,adminToken=null,now=Date.now}={}){
+  const creationEnabled=Boolean(enabled&&store&&typeof verifyLicense==='function'&&typeof verifyIssuedCertificate==='function'),publicReadEnabled=Boolean(store);
   return async(context,req)=>{
     const action=req?.params?.action,isPublic=PUBLIC_ACTIONS.has(action);
     const respond=(status,body,extra={})=>context.res={status,headers:{...HEADERS,...(isPublic&&{'Access-Control-Allow-Origin':'*'}),...extra},body};
@@ -96,7 +96,7 @@ function createPublicGiftHandler({enabled=false,store,verifyLicense,adminToken=n
         for(let attempt=0;attempt<5;attempt++){
           const snapshot=await store.read(),state=readPaidState(snapshot),record=state.gifts.find(gift=>gift.id===req.body.id);if(!record)throw error('gift_not_found',404);
           if(!operator&&!same(record.credentialHash,credentialHash(license))){
-            let grant;try{grant=await verifyLicense(license,record.productSku);}catch{throw error('not_your_gift',403);}
+            let grant;try{grant=await verifyRemovalLicense(license,record.productSku);}catch{throw error('not_your_gift',403);}
             if(!same(record.owner,grant.owner)||!grantProducts(grant).some(product=>product.sku===record.productSku))throw error('not_your_gift',403);
           }
           state.gifts=state.gifts.filter(gift=>gift.id!==record.id);if(await store.write(state,snapshot.etag)){respond(200,{removed:true});return;}
@@ -112,6 +112,12 @@ function createPublicGiftHandler({enabled=false,store,verifyLicense,adminToken=n
       }
       const input=submission(req.body),grant=await verifyLicense(license),entitled=grantProducts(grant);
       if(!entitled.some(product=>product.sku===input.productSku))throw error('product_not_purchased',403);
+      if(products.some(product=>product.sku===input.productSku&&product.kind==='digital-certificate')){
+        if(typeof verifyIssuedCertificate!=='function')throw error('public_gifting_not_open',503);
+        let issued;try{issued=await verifyIssuedCertificate(license,input.productSku,input.name);}
+        catch(e){if(e.code==='issued_recipient_required')throw error('certificate_recipient_mismatch',403);throw e;}
+        if(!issued||!same(issued.owner,grant.owner)||issued.recipient!==input.name)throw error('certificate_recipient_mismatch',403);
+      }
       const fingerprint=digest(JSON.stringify(input));
       for(let attempt=0;attempt<5;attempt++){
         const snapshot=await store.read(),state=readPaidState(snapshot),time=now();pruneReceipts(state,time);
@@ -122,13 +128,15 @@ function createPublicGiftHandler({enabled=false,store,verifyLicense,adminToken=n
         if(productCount(state,input.productSku)>=100||state.gifts.length>=1500)throw error('gift_full',409);
         if(publicationLimited(state,grant.owner,time)){respond(429,{error:'publication_limit'},{'Retry-After':'60'});return;}
         const record={...input,id:randomBytes(12).toString('hex'),createdAt:time,owner:grant.owner,credentialHash:grant.credentialHash};
+        if(products.some(product=>product.sku===input.productSku&&product.kind==='digital-certificate'))state.certificateClaims.push({owner:grant.owner,productSku:input.productSku,id:record.id});
+        if(state.certificateClaims.length>10000)throw error('gift_full',409);
         state.gifts.push(record);state.giftReceipts.push({owner:grant.owner,requestId:req.body.requestId,fingerprint,id:record.id,at:time});
         if(Buffer.byteLength(JSON.stringify(state))>MAX_BYTES)throw error('gift_full',409);
         if(await store.write(state,snapshot.etag)){respond(201,{gift:project(record)});return;}
       }
       throw error('gift_busy',503);
     }catch(failure){
-      const known=new Set(['invalid_submission','product_not_purchased','gift_not_found','not_your_gift','handle_conflict','gift_already_used','retry_changed','gift_removed','gift_full','gift_busy']);
+      const known=new Set(['public_gifting_not_open','certificate_recipient_mismatch','invalid_submission','product_not_purchased','gift_not_found','not_your_gift','handle_conflict','gift_already_used','retry_changed','gift_removed','gift_full','gift_busy']);
       if(failure.code==='payment_required'){respond(402,{error:'payment_required'});return;}
       if(failure.code==='payment_unavailable'){respond(503,{error:'payment_unavailable'});return;}
       respond(known.has(failure.code)?failure.status:503,{error:known.has(failure.code)?failure.code:'gift_unavailable'});

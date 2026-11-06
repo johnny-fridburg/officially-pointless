@@ -27,7 +27,7 @@ function setup(options={}){
   return new Response(JSON.stringify({success:true,purchase:providerPurchase(productId,product.permalink,key,purchase.saleId,purchase.extra)}));
  }});
  const store=options.store||new TestStore();
- const handler=gift.createPublicGiftHandler({enabled:true,store,verifyLicense,now:()=>time,...options});
+ const handler=gift.createPublicGiftHandler({enabled:true,store,verifyLicense,verifyIssuedCertificate:async(license,sku,recipient)=>({owner:(await verifyLicense(license,sku)).owner,recipient}),now:()=>time,...options});
  const department=createDepartmentHandler({enabled:true,store,verifyLicense,now:()=>time,...options});
  return {handler,department,store,verifyLicense,advance:ms=>time+=ms,time:()=>time,
   purchase:(key,sku,saleId=key,extra={})=>purchases.set(key,{sku,saleId,extra}),providerCalls:()=>providerCalls};
@@ -150,7 +150,7 @@ test('idempotent retry keeps its gift, changed retry fails and removal does not 
  assert.equal((await call(f.handler,'publish',{...body,text:'Changed'})).status,409);
  assert.equal((await call(f.handler,'publish',publicInput())).status,409);
  await call(f.handler,'remove',{id:first.body.gift.id});assert.equal((await call(f.handler,'publish',body)).status,410);
- f.advance(11000);assert.equal((await call(f.handler,'publish',publicInput())).status,201);
+ f.advance(11000);assert.equal((await call(f.handler,'publish',publicInput())).status,409);assert.equal((await call(f.handler,'publish',publicInput(),OTHER)).status,201);
 });
 
 test('original key removal survives closing creation/refund/provider outage without trusting another key',async()=>{
@@ -164,7 +164,7 @@ test('original key removal survives closing creation/refund/provider outage with
 test('rotated verified keys and operators remove only the corresponding publisher gift',async()=>{
  const f=setup({adminToken:'fixture-operator-token-with-at-least-32-characters'}),first=await call(f.handler,'publish',publicInput());
  const next='f'.repeat(32);f.purchase(next,CERT,'sale-a');assert.equal((await call(f.handler,'remove',{id:first.body.gift.id},next)).status,200);
- f.advance(11000);const again=await call(f.handler,'publish',publicInput());
+ f.advance(11000);const again=await call(f.handler,'publish',publicInput(),OTHER);assert.equal(again.status,201);
  assert.equal((await call(f.handler,'remove',{id:again.body.gift.id},'',{}, {'x-pointless-operator':'fixture-operator-token-with-at-least-32-characters'})).status,200);
 });
 
@@ -177,9 +177,9 @@ test('concurrent conditional writes preserve independent gifts and one active pr
 
 test('shared v2 migration preserves every legacy field and does not count dedications as received gifts',async()=>{
  const f=setup();const old=await call(f.department,'publish',{department:'museum',name:'Legacy alias',text:'Private legacy meaning.',requestId:randomUUID()},COLLECTION);
- assert.equal(old.status,201);const before=structuredClone(f.store.state);before.version=2;delete before.gifts;delete before.giftReceipts;f.store.state=before;
+ assert.equal(old.status,201);const before=structuredClone(f.store.state);before.version=2;delete before.gifts;delete before.giftReceipts;delete before.certificateClaims;f.store.state=before;
  f.advance(11000);const created=await call(f.handler,'publish',publicInput('department-silence'),COLLECTION);assert.equal(created.status,201);
- assert.equal(f.store.state.version,3);assert.deepEqual(f.store.state.records,before.records);assert.deepEqual(f.store.state.receipts,before.receipts);
+ assert.equal(f.store.state.version,4);assert.deepEqual(f.store.state.records,before.records);assert.deepEqual(f.store.state.receipts,before.receipts);
  const feed=await call(f.handler,'feed');assert.equal(feed.body.stats.giftCount,1);assert(!JSON.stringify(feed.body).includes('Legacy alias'));
  const access=await call(f.department,'access',{},COLLECTION);assert.equal(access.status,200);assert.equal(access.body.records[0].id,old.body.record.id);
  const giftsBefore=structuredClone(f.store.state.gifts);f.advance(11000);
@@ -193,7 +193,7 @@ test('legacy dedication and new gift consume one shared purchase/product slot ac
   call(f.department,'publish',{department:'museum',name:'Legacy alias',text:'One entitlement.',requestId:randomUUID()},COLLECTION),
   call(f.handler,'publish',publicInput('department-museum'),COLLECTION),
  ]);
- assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);assert.equal(f.store.state.version,3);assert.equal(f.store.state.records.length+f.store.state.gifts.length,1);
+ assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);assert.equal(f.store.state.version,4);assert.equal(f.store.state.records.length+f.store.state.gifts.length,1);
 });
 
 test('strict shared state rejects private/malformed gift fields and legacy community content before public reading',async()=>{
@@ -201,7 +201,7 @@ test('strict shared state rejects private/malformed gift fields and legacy commu
  const f=setup();await call(f.handler,'publish',publicInput());const valid=structuredClone(f.store.state);
  for(const state of [
   {version:1,records:[{name:'PRIVATE LEGACY COMMUNITY'}],receipts:[]},
-  {...valid,extra:'private'}, {...valid,version:4}, {...valid,giftReceipts:undefined},
+  {...valid,extra:'private'}, {...valid,version:5}, {...valid,giftReceipts:undefined},
   {...valid,gifts:[{...valid.gifts[0],giver:'PRIVATE GIVER'}]},
   {...valid,gifts:[{...valid.gifts[0],consent:false}]},
   {...valid,gifts:[{...valid.gifts[0],productSku:'unknown'}]},
@@ -257,8 +257,29 @@ test('shared publication cooldown, size/capacity failures and CAS exhaustion do 
  assert.equal((await call(f.handler,'publish',publicInput('department-silence'),COLLECTION)).status,429);
  assert.equal((await call(f.department,'publish',{department:'button',name:'Legacy',text:'Same budget.',requestId:randomUUID()},COLLECTION)).status,429);
  const full=setup();await call(full.handler,'publish',publicInput());const base=full.store.state.gifts[0];
- for(let i=1;i<100;i++)full.store.state.gifts.push({...base,id:i.toString(16).padStart(24,'0'),owner:i.toString(16).padStart(64,'0')});
+ for(let i=1;i<100;i++){const record={...base,id:i.toString(16).padStart(24,'0'),owner:i.toString(16).padStart(64,'0')};full.store.state.gifts.push(record);full.store.state.certificateClaims.push({owner:record.owner,productSku:record.productSku,id:record.id});}
  assert.equal((await call(full.handler,'publish',publicInput(),OTHER)).status,409);
  const busy=setup({store:{read:async()=>({state:null,etag:null}),write:async()=>false}});
  const result=await call(busy.handler,'publish',publicInput());assert.equal(result.status,503);assert.equal(result.body.error,'gift_busy');
+});
+test('removing a certificate public honor does not grant another recipient instance',async()=>{
+ const f=setup();const published=await call(f.handler,'publish',publicInput());assert.equal(published.status,201);
+ assert.equal((await call(f.handler,'remove',{id:published.body.gift.id})).status,200);
+ const next=await call(f.handler,'publish',publicInput(CERT,{name:'Another Recipient',recipientHandle:'another-recipient',requestId:'dddddddd-dddd-dddd-dddd-dddddddddddd'}));
+ assert.equal(next.status,409);assert.equal(next.body.error,'gift_already_used');assert.equal(f.store.state.gifts.length,0);
+});
+test('certificate public honor requires the actually issued recipient and purchase owner',async()=>{
+ const absent=setup({verifyIssuedCertificate:null});assert.equal((await call(absent.handler,'status')).body.creationEnabled,false);assert.equal((await call(absent.handler,'publish',publicInput())).status,503);assert.equal(absent.store.state,null);
+ for(const mismatch of ['recipient','owner']){
+  const f=setup({verifyIssuedCertificate:async(license,sku,recipient)=>({owner:mismatch==='owner'?'f'.repeat(64):(await f.verifyLicense(license,sku)).owner,recipient:mismatch==='recipient'?'Different Recipient':recipient})});
+  const response=await call(f.handler,'publish',publicInput());assert.equal(response.status,403);assert.equal(response.body.error,'certificate_recipient_mismatch');assert.equal(f.store.state,null);
+ }
+});
+
+test('real private issued-proof denial becomes recipient guidance without creating public records',async()=>{
+ const {createIssuedCertificateVerifier}=require('./instance-proxy');
+ const verifyIssuedCertificate=createIssuedCertificateVerifier({env:{POINTLESS_INSTANCE_BACKEND_URL:'https://officially-pointless-instances.azurewebsites.net',POINTLESS_INSTANCE_BACKEND_KEY:'k'.repeat(64)},
+  request:async()=>new Response(JSON.stringify({error:'issued_recipient_required'}),{status:403})});
+ const f=setup({verifyIssuedCertificate});const result=await call(f.handler,'publish',publicInput());
+ assert.equal(result.status,403);assert.equal(result.body.error,'certificate_recipient_mismatch');assert.equal(f.store.state,null);
 });

@@ -326,7 +326,10 @@ test('storefront defaults to closed purchases and gives no payment entitlement',
   }
   for (const slug of ['minister-of-unopened-tabs','secretary-of-one-more-coffee','director-of-unnecessary-meetings','chief-of-the-snack-drawer','commissioner-of-replying-tomorrow']) {
     const html = readFileSync(join(__dirname, '..', 'site/certificates', slug, 'index.html'), 'utf8');
-    assert.doesNotMatch(html, /<(?:input|textarea|canvas|iframe)\b/i, slug);
+    assert.doesNotMatch(html, /<(?:textarea|canvas|iframe|svg)\b/i, slug);
+    assert.match(html, /id="instance-form"/, slug);
+    assert.match(html, /watermarked/i, slug);
+    assert.doesNotMatch(html, /EDIT-YOUR-CERTIFICATE|one editable|Download.*SVG/, slug);
     assert.match(html, /<button(?=[^>]*id="checkout-button")(?=[^>]*\bdisabled\b)[^>]*>/, slug);
     assert.match(html, new RegExp('data-checkout-sku="certificate-' + slug + '"'), slug);
   }
