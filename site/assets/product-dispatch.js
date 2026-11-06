@@ -11,24 +11,60 @@
     const site = sites.find(site => site.host === hostname);
     return site ? site.path : null;
   }
-  if (typeof module === 'object' && module.exports) module.exports = {productRoute, siteForPath};
+  function cleanProductSearch(hostname, pathname, search) {
+    const site = sites.find(site => site.host === hostname);
+    const certificate = site?.host === 'promotions.officiallypointless.com' && certificatePaths.includes(pathname);
+    const department = site && site.host !== 'promotions.officiallypointless.com' &&
+      ['/', '/index.html', site.path].includes(pathname);
+    const promotions = site?.host === 'promotions.officiallypointless.com' && ['/', '/index.html', site.path].includes(pathname);
+    if (!certificate && !department && !promotions) return search;
+    const params = new URLSearchParams(search);
+    const removeMatching = (key, expected) => {
+      const values = params.getAll(key);
+      if (values.length && values.every(value => value === expected)) params.delete(key);
+    };
+    if (promotions) removeMatching('product', site.sku);
+    if (certificate) {
+      const slug = pathname.split('/')[2];
+      removeMatching('product', 'certificate-' + slug);
+      removeMatching('title', slug);
+    }
+    if (department) {
+      removeMatching('product', site.sku);
+      removeMatching('department', site.sku.slice('department-'.length));
+    }
+    // Preserve the exact encoding/order of unrelated parameters, including signed tokens.
+    const removedKeys = ['product', 'title', 'department'].filter(key =>
+      new URLSearchParams(search).has(key) && !params.has(key));
+    if (!removedKeys.length) return search;
+    const remaining = search.replace(/^\?/, '').split('&').filter(part => {
+      const key = [...new URLSearchParams('&' + part).keys()][0];
+      return !removedKeys.includes(key);
+    }).join('&');
+    return remaining ? '?' + remaining : '';
+  }
+  if (typeof module === 'object' && module.exports) module.exports = {productRoute, siteForPath, cleanProductSearch};
   if (typeof window === 'object') {
     const route = productRoute(window.location.hostname, window.location.pathname);
     if (route) {
-      window.location.replace(route + window.location.search + window.location.hash);
+      window.location.replace(route + cleanProductSearch(window.location.hostname, route, window.location.search) + window.location.hash);
       return;
     }
+    const cleanSearch = cleanProductSearch(window.location.hostname, window.location.pathname, window.location.search);
+    const currentSite = sites.find(site => site.host === window.location.hostname);
+    const displayPath = currentSite?.path === window.location.pathname ? '/' : window.location.pathname;
+    if (cleanSearch !== window.location.search || displayPath !== window.location.pathname) window.history.replaceState(window.history.state, '', displayPath + cleanSearch + window.location.hash);
     const site = sites.find(site => site.host === window.location.hostname);
     if (['officiallypointless.com', 'www.officiallypointless.com'].includes(window.location.hostname) && window.location.protocol === 'https:') {
       for (const link of document.querySelectorAll('a[href^="/"]')) {
         const href = link.getAttribute('href');
         const url = new URL(href, window.location.origin);
         const product = siteForPath(url.pathname);
-        if (product) link.setAttribute('href', 'https://' + product.host + url.pathname + url.search + url.hash);
+        if (product) link.setAttribute('href', 'https://' + product.host + (url.pathname === product.path ? '/' : url.pathname) + cleanProductSearch(product.host, url.pathname, url.search) + url.hash);
       }
     }
     if (site && window.location.protocol === 'https:') {
-      if (window.location.pathname === site.path || site.host === 'promotions.officiallypointless.com' && certificatePaths.includes(window.location.pathname)) {
+      if (window.location.pathname === '/' || window.location.pathname === site.path || site.host === 'promotions.officiallypointless.com' && certificatePaths.includes(window.location.pathname)) {
         const canonical = 'https://' + site.host + window.location.pathname;
         document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical);
         document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical);
@@ -37,7 +73,9 @@
         const href = link.getAttribute('href');
         if (href.startsWith('//')) continue;
         const target = siteForPath(new URL(href, window.location.origin).pathname);
-        link.setAttribute('href', (target?.host === site.host ? 'https://' + site.host : 'https://officiallypointless.com') + href);
+        const url = new URL(href, window.location.origin);
+        if (target) link.setAttribute('href', 'https://' + target.host + (url.pathname === target.path ? '/' : url.pathname) + cleanProductSearch(target.host, url.pathname, url.search) + url.hash);
+        else link.setAttribute('href', 'https://officiallypointless.com' + href);
       }
     }
   }
