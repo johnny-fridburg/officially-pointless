@@ -8,6 +8,8 @@ const { TextDecoder } = require('node:util');
 // Reviewed public surface. Changing this list requires a new publication review.
 const reviewedPaths = [
   "api/instance-proxy.js",
+  "api/instance-transport.js",
+  "api/instance-transport.test.js",
   "api/instance-proxy.test.js",
   "api/certificates/index.js",
   "api/certificates/function.json",

@@ -1,5 +1,6 @@
 'use strict';
 const {commerceRequest}=require('./commerce-origins');
+const {instanceRequest}=require('./instance-transport');
 const products=require('./gift-products.json').filter(p=>p.kind==='digital-certificate');
 const skus=new Set(products.map(p=>p.sku));
 const errors=new Set(['invalid_request','invalid_preview','invalid_name','unsupported_name_characters','unknown_product',
@@ -22,7 +23,7 @@ async function boundedJson(response){
  finally{await reader.cancel().catch(()=>{});}
  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
-function createInstanceProxy({env=process.env,request=fetch}={}){
+function createInstanceProxy({env=process.env,request=instanceRequest}={}){
  return async(context,req)=>{
   const policy=commerceRequest(req,'POST');if(policy.status){context.res=policy;return;}
   const respond=(status,body)=>{context.res={status,headers:policy.headers,body};};
@@ -32,7 +33,7 @@ function createInstanceProxy({env=process.env,request=fetch}={}){
   const valid=action==='preview'?exact(body,['action','sku','recipient','giver'])&&skus.has(body.sku)&&text(body.recipient,60)&&text(body.giver,60):
     action==='deliver'&&exact(body,['action','instance','license'])&&text(body.instance,1600)&&typeof body.license==='string'&&/^[A-Za-z0-9-]{16,128}$/.test(body.license);
   if(!valid){respond(400,{error:'invalid_request'});return;}
-  const config=backendConfig(env);if(!config){respond(503,{error:'delivery_unavailable'});return;}
+  const config=backendConfig(env);if(!config){respond(503,{error:'preview_not_configured'});return;}
   try{
    const payload={...body};delete payload.action;
    const response=await request(config.url+'/api/instances/'+action,{method:'POST',redirect:'error',
@@ -51,7 +52,7 @@ function createInstanceProxy({env=process.env,request=fetch}={}){
   }catch{respond(503,{error:'delivery_unavailable'});}
  };
 }
-function createIssuedCertificateVerifier({env=process.env,request=fetch}={}){
+function createIssuedCertificateVerifier({env=process.env,request=instanceRequest}={}){
  return async(license,productSku,recipientName)=>{
   const fail=code=>Object.assign(Error(code),{code});
   const config=backendConfig(env);

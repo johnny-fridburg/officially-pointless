@@ -1,6 +1,8 @@
 {
   "files": [
     "api/instance-proxy.js",
+    "api/instance-transport.js",
+    "api/instance-transport.test.js",
     "api/instance-proxy.test.js",
     "api/certificates/index.js",
     "api/certificates/function.json",
