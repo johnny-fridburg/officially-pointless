@@ -1,19 +1,24 @@
 'use strict';
 
 const { getCommerceConfig } = require('../catalog');
+const {commerceRequest} = require('../commerce-origins');
 
-module.exports = async function (context) {
-  const { catalog, checkoutEnabled, departmentCollection } = getCommerceConfig();
+module.exports = async function (context, req = {method: 'GET'}) {
+  const policy = commerceRequest(req, 'GET');
+  if (policy.status) { context.res = policy; return; }
+  const { catalog, checkoutEnabled, departmentCollection, departmentProducts, certificateProducts } = getCommerceConfig();
   context.res = {
     status: 200,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    headers: policy.headers,
     body: {
       service: 'officially-pointless',
       provider: 'gumroad',
       checkoutEnabled,
       catalog,
       departmentCollection:{catalog:departmentCollection.catalog,checkoutEnabled:departmentCollection.checkoutEnabled},
-      ...(!checkoutEnabled && { reason: 'Checkout is not open.' }),
+      departmentProducts:departmentProducts.map(({catalog,checkoutEnabled})=>({catalog,checkoutEnabled})),
+      certificateProducts:certificateProducts.map(({catalog,checkoutEnabled})=>({catalog,checkoutEnabled})),
+      ...(!checkoutEnabled && { reason: 'Legacy bundle purchases are closed.' }),
     },
   };
 };

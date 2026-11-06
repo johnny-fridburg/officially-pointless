@@ -1,6 +1,6 @@
 {
   "globalHeaders": {
-    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'sha256-JqrQk57V0Acg2zxSDk1u/QqxiLyQX747nQT55yiVnyg='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'sha256-JqrQk57V0Acg2zxSDk1u/QqxiLyQX747nQT55yiVnyg='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://officiallypointless.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()"

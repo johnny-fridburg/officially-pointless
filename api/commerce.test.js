@@ -36,6 +36,12 @@ async function callStatus() {
   return context.res;
 }
 
+async function callStatusRequest(options) {
+  const context = {};
+  await status(context, options);
+  return context.res;
+}
+
 async function callCheckout(body, options = {}) {
   const context = {};
   await checkout(context, {
@@ -65,13 +71,13 @@ test('catalog is canonical and checkout is closed by default', async () => {
   });
 });
 
-test('only the exact flag and canonical URL enable checkout', async () => {
+test('legacy gift-kit checkout stays closed even with its former launch settings', async () => {
   const enabled = { POINTLESS_CHECKOUT_ENABLED: 'true', GUMROAD_CHECKOUT_URL: checkoutUrl };
   await withCommerceEnv(enabled, async () => {
     const response = await callStatus();
-    assert.equal(response.body.checkoutEnabled, true);
+    assert.equal(response.body.checkoutEnabled, false);
     assert.deepEqual(response.body.catalog, catalog);
-    assert.equal(response.body.reason, undefined);
+    assert.equal(typeof response.body.reason, 'string');
     assert.equal(response.headers['Cache-Control'], 'no-store');
   });
 });
@@ -103,18 +109,12 @@ test('malformed enable flags keep the gate closed', async () => {
   }
 });
 
-test('POST returns only the approved checkout destination and product metadata', async () => {
+test('a legacy kit checkout request cannot sell the retired bundle', async () => {
   await withCommerceEnv({ POINTLESS_CHECKOUT_ENABLED: 'true', GUMROAD_CHECKOUT_URL: checkoutUrl }, async () => {
     const response = await callCheckout({ sku: catalog.sku });
-    assert.equal(response.status, 200);
+    assert.equal(response.status, 503);
     assert.equal(response.headers['Cache-Control'], 'no-store');
-    assert.deepEqual(response.body, {
-      checkoutUrl,
-      sku: 'unnecessary-promotions',
-      priceUsd: 19,
-      currency: 'USD',
-      fulfillment: 'gumroad',
-    });
+    assert.deepEqual(response.body, {error: 'checkout_not_open'});
   });
 });
 
@@ -171,12 +171,12 @@ test('foreign or malformed Origin returns 403', async () => {
   });
 });
 
-test('both approved Origins may request the destination', async () => {
+test('both approved Origins receive the retired kit purchase state', async () => {
   await withCommerceEnv({ POINTLESS_CHECKOUT_ENABLED: 'true', GUMROAD_CHECKOUT_URL: checkoutUrl }, async () => {
     for (const origin of ['https://officiallypointless.com', 'https://www.officiallypointless.com']) {
       const response = await callCheckout({ sku: catalog.sku }, { headers: { origin } });
-      assert.equal(response.status, 200, origin);
-      assert.equal(response.body.checkoutUrl, checkoutUrl);
+      assert.equal(response.status, 503, origin);
+      assert.equal(response.body.checkoutUrl, undefined);
     }
   });
 });
@@ -188,13 +188,263 @@ async function withDepartmentEnv(values,action){const original=Object.fromEntrie
 test('department checkout is a distinct closed $19 collection, never the gift-kit product',async()=>{
  await withCommerceEnv({},()=>withDepartmentEnv({},async()=>{const status=await callStatus();assert.deepEqual(status.body.departmentCollection,{catalog:departmentCatalog,checkoutEnabled:false});const response=await callCheckout({sku:'department-collection'});assert.equal(response.status,503);assert.equal(response.body.error,'checkout_not_open');}));
 });
-test('accepted collection checkout returns only its fixed destination without opening gift checkout',async()=>{
- await withCommerceEnv({},()=>withDepartmentEnv(departmentEnv,async()=>{const status=await callStatus();assert.equal(status.body.checkoutEnabled,false);assert.equal(status.body.departmentCollection.checkoutEnabled,true);const response=await callCheckout({sku:'department-collection'});assert.deepEqual(response.body,{checkoutUrl:departmentUrl,sku:'department-collection',priceUsd:19,currency:'USD',fulfillment:'gumroad'});assert.equal((await callCheckout({sku:'unnecessary-promotions'})).status,503);}));
+test('legacy collection checkout stays closed even when all former acceptance settings are present',async()=>{
+ await withCommerceEnv({},()=>withDepartmentEnv(departmentEnv,async()=>{const status=await callStatus();assert.equal(status.body.checkoutEnabled,false);assert.equal(status.body.departmentCollection.checkoutEnabled,false);const response=await callCheckout({sku:'department-collection'});assert.equal(response.status,503);assert.deepEqual(response.body,{error:'checkout_not_open'});assert.equal((await callCheckout({sku:'unnecessary-promotions'})).status,503);}));
 });
 test('missing acceptance, moderation, product or storage cannot sell a collection',async()=>{
  for(const key of Object.keys(departmentEnv))await withDepartmentEnv({...departmentEnv,[key]:undefined},async()=>{assert.equal((await callStatus()).body.departmentCollection.checkoutEnabled,false,key);assert.equal((await callCheckout({sku:'department-collection'})).status,503,key);});
  for(const url of [departmentUrl+'?paid=true','https://evil.invalid/l/department-collection'])await withDepartmentEnv({...departmentEnv,GUMROAD_DEPARTMENT_CHECKOUT_URL:url},async()=>{assert.equal((await callCheckout({sku:'department-collection'})).status,503);});
 });
-test('gift checkout opening never opens a department collection or accepts forged prices',async()=>{
- await withCommerceEnv({POINTLESS_CHECKOUT_ENABLED:'true',GUMROAD_CHECKOUT_URL:checkoutUrl},()=>withDepartmentEnv({},async()=>{assert.equal((await callCheckout({sku:'unnecessary-promotions'})).status,200);assert.equal((await callCheckout({sku:'department-collection'})).status,503);for(const extra of [{paid:true},{priceUsd:1},{checkoutUrl:departmentUrl}])assert.equal((await callCheckout({sku:'department-collection',...extra})).status,400);}));
+test('former launch settings cannot resell bundles or accept forged prices',async()=>{
+ await withCommerceEnv({POINTLESS_CHECKOUT_ENABLED:'true',GUMROAD_CHECKOUT_URL:checkoutUrl},()=>withDepartmentEnv({},async()=>{assert.equal((await callCheckout({sku:'unnecessary-promotions'})).status,503);assert.equal((await callCheckout({sku:'department-collection'})).status,503);for(const extra of [{paid:true},{priceUsd:1},{checkoutUrl:departmentUrl}])assert.equal((await callCheckout({sku:'department-collection',...extra})).status,400);}));
+});
+
+const individualProducts = [
+  ['make-it-worse', 'MAKE_IT_WORSE'], ['silence', 'SILENCE'],
+  ['loading', 'LOADING'], ['last-word', 'LAST_WORD'], ['museum', 'MUSEUM'],
+  ['golden-error', 'GOLDEN_ERROR'], ['button', 'BUTTON'], ['empty-wing', 'EMPTY_WING'],
+  ['unnecessary-ribbon', 'UNNECESSARY_RIBBON'], ['invisible-monument', 'INVISIBLE_MONUMENT'],
+];
+const individualNames = individualProducts.flatMap(([, name]) => [
+  `GUMROAD_DEPARTMENT_${name}_PRODUCT_ID`, `GUMROAD_DEPARTMENT_${name}_CHECKOUT_URL`,
+  `POINTLESS_DEPARTMENT_${name}_ACCEPTED`, `POINTLESS_DEPARTMENT_${name}_CHECKOUT_ENABLED`,
+]);
+const certificates=[
+  ['minister-of-unopened-tabs','MINISTER_OF_UNOPENED_TABS'],
+  ['secretary-of-one-more-coffee','SECRETARY_OF_ONE_MORE_COFFEE'],
+  ['director-of-unnecessary-meetings','DIRECTOR_OF_UNNECESSARY_MEETINGS'],
+  ['chief-of-the-snack-drawer','CHIEF_OF_THE_SNACK_DRAWER'],
+  ['commissioner-of-replying-tomorrow','COMMISSIONER_OF_REPLYING_TOMORROW'],
+];
+const certificateNames=certificates.flatMap(([,name])=>[
+  `GUMROAD_CERTIFICATE_${name}_PRODUCT_ID`,`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`,
+  `POINTLESS_CERTIFICATE_${name}_ACCEPTED`,`POINTLESS_CERTIFICATE_${name}_CHECKOUT_ENABLED`,
+]);
+const certificateEnv={POINTLESS_SELLER_ACCEPTED:'true',
+  GUMROAD_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_PRODUCT_ID:'fixture-certificate-product',
+  GUMROAD_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_CHECKOUT_URL:'https://fridburg.gumroad.com/l/pointless-minister-of-unopened-tabs',
+  POINTLESS_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_ACCEPTED:'true',
+  POINTLESS_CERTIFICATE_MINISTER_OF_UNOPENED_TABS_CHECKOUT_ENABLED:'true',
+};
+const museumEnv = {
+  ...departmentEnv,
+  POINTLESS_DEPARTMENTS_ACCEPTED: undefined,
+  GUMROAD_DEPARTMENT_PRODUCT_ID: undefined,
+  POINTLESS_DEPARTMENT_CHECKOUT_ENABLED: undefined,
+  GUMROAD_DEPARTMENT_CHECKOUT_URL: undefined,
+  GUMROAD_DEPARTMENT_MUSEUM_PRODUCT_ID: 'fixture-museum-product',
+  GUMROAD_DEPARTMENT_MUSEUM_CHECKOUT_URL: 'https://fridburg.gumroad.com/l/pointless-museum',
+  POINTLESS_DEPARTMENT_MUSEUM_ACCEPTED: 'true',
+  POINTLESS_DEPARTMENT_MUSEUM_CHECKOUT_ENABLED: 'true',
+};
+async function withProductEnv(values, action) {
+  const names = [...new Set([...Object.keys(departmentEnv), ...individualNames, ...certificateNames])];
+  const original = Object.fromEntries(names.map(name => [name, process.env[name]]));
+  for (const name of names) {
+    if (values[name] === undefined) delete process.env[name];
+    else process.env[name] = values[name];
+  }
+  try { return await action(); }
+  finally {
+    for (const name of names) {
+      if (original[name] === undefined) delete process.env[name];
+      else process.env[name] = original[name];
+    }
+  }
+}
+
+test('status lists ten individually closed products without private verification settings', async () => {
+  await withProductEnv({}, async () => {
+    const result = await callStatus();
+    assert.deepEqual(result.body.departmentProducts, individualProducts.map(([slug]) => ({
+      catalog: {sku: `department-${slug}`, priceUsd: 19, currency: 'USD', kind: 'online-department'},
+      checkoutEnabled: false,
+    })));
+    assert.equal(result.body.departmentProducts.some(product => product.checkoutUrl || product.productId), false);
+  });
+});
+
+test('an accepted individual checkout opens only its exact SKU and provider destination', async () => {
+  await withCommerceEnv({}, () => withProductEnv(museumEnv, async () => {
+    const result = await callStatus();
+    assert.equal(result.body.checkoutEnabled, false);
+    assert.equal(result.body.departmentCollection.checkoutEnabled, false);
+    assert.equal(result.body.departmentProducts?.filter(product => product.checkoutEnabled).length, 1);
+    const opened = await callCheckout({sku: 'department-museum'});
+    assert.equal(opened.status, 200);
+    assert.deepEqual(opened.body, {
+      checkoutUrl: 'https://fridburg.gumroad.com/l/pointless-museum',
+      sku: 'department-museum', priceUsd: 19, currency: 'USD', fulfillment: 'gumroad',
+    });
+    assert.equal((await callCheckout({sku: 'department-silence'})).status, 503);
+    assert.equal((await callCheckout({sku: 'department-collection'})).status, 503);
+    for (const sku of ['department-unknown', 'department-museum?paid=true', 'department-collection/museum', '__proto__', 'constructor']) {
+      assert.equal((await callCheckout({sku})).status, 404, sku);
+    }
+    for (const extra of [{paid: true}, {priceUsd: 1}, {checkoutUrl: departmentUrl}]) {
+      assert.equal((await callCheckout({sku: 'department-museum', ...extra})).status, 400);
+    }
+    for (const privateValue of ['fixture-museum-product', 'fixture-moderation-token', 'sig=fixture']) {
+      assert.equal(JSON.stringify(result.body).includes(privateValue), false);
+    }
+  }));
+});
+
+test('each individual product uses a separate accepted product ID and exact pointless permalink', async () => {
+  for (const [slug, name] of individualProducts) {
+    const destination = `https://fridburg.gumroad.com/l/pointless-${slug}`;
+    const env = {...museumEnv,
+      POINTLESS_DEPARTMENT_MUSEUM_ACCEPTED: undefined,
+      [`GUMROAD_DEPARTMENT_${name}_PRODUCT_ID`]: `fixture-${slug}-product`,
+      [`GUMROAD_DEPARTMENT_${name}_CHECKOUT_URL`]: destination,
+      [`POINTLESS_DEPARTMENT_${name}_ACCEPTED`]: 'true',
+      [`POINTLESS_DEPARTMENT_${name}_CHECKOUT_ENABLED`]: 'true',
+    };
+    await withProductEnv(env, async () => {
+      const opened = await callCheckout({sku: `department-${slug}`});
+      assert.equal(opened.status, 200, slug);
+      assert.equal(opened.body.checkoutUrl, destination, slug);
+      assert.equal(opened.body.sku, `department-${slug}`);
+    });
+  }
+});
+
+test('individual sales require their own acceptance, provider, destination and operator readiness', async () => {
+  const required = [
+    'POINTLESS_DEPARTMENTS_ENABLED', 'POINTLESS_SELLER_ACCEPTED',
+    'POINTLESS_DEPARTMENTS_BLOB_URL', 'POINTLESS_DEPARTMENTS_ADMIN_TOKEN',
+    'GUMROAD_DEPARTMENT_MUSEUM_PRODUCT_ID', 'GUMROAD_DEPARTMENT_MUSEUM_CHECKOUT_URL',
+    'POINTLESS_DEPARTMENT_MUSEUM_ACCEPTED', 'POINTLESS_DEPARTMENT_MUSEUM_CHECKOUT_ENABLED',
+  ];
+  for (const name of required) {
+    await withProductEnv({...museumEnv, [name]: undefined}, async () => {
+      const response = await callCheckout({sku: 'department-museum'});
+      assert.equal(response.status, 503, name);
+      assert.equal(response.body.error, 'checkout_not_open');
+    });
+  }
+  for (const url of [
+    departmentUrl, 'https://fridburg.gumroad.com/l/pointless-museum?paid=true',
+    'https://fridburg.gumroad.com/l/pointless-museum#access',
+    'https://fridburg.gumroad.com.evil.invalid/l/pointless-museum',
+    'https://fridburg.gumroad.com@evil.invalid/l/pointless-museum',
+    'https://fridburg.gumroad.com:443/l/pointless-museum',
+  ]) {
+    await withProductEnv({...museumEnv, GUMROAD_DEPARTMENT_MUSEUM_CHECKOUT_URL: url}, async () => {
+      assert.equal((await callCheckout({sku: 'department-museum'})).status, 503, url);
+    });
+  }
+});
+
+test('the exact eleven product origins can read status and preflight central checkout', async () => {
+  const origins = ['https://promotions.officiallypointless.com', ...individualProducts.map(([slug]) => `https://${slug}.officiallypointless.com`)];
+  await withCommerceEnv({}, () => withProductEnv({}, async () => {
+    for (const origin of origins) {
+      const result = await callStatusRequest({method: 'GET', headers: {Origin: origin}});
+      assert.equal(result.status, 200, origin);
+      assert.equal(result.headers['Access-Control-Allow-Origin'], origin);
+      assert.equal(result.headers.Vary, 'Origin');
+      const preflight = await callCheckout(undefined, {method: 'OPTIONS', headers: {
+        origin, 'access-control-request-method': 'POST',
+        'access-control-request-headers': 'content-type, accept',
+      }});
+      assert.equal(preflight.status, 204, origin);
+      assert.equal(preflight.headers['Access-Control-Allow-Origin'], origin);
+      assert.match(preflight.headers['Access-Control-Allow-Methods'], /POST/);
+      assert.match(preflight.headers['Access-Control-Allow-Headers'], /Content-Type/i);
+      assert.equal(preflight.headers['Access-Control-Allow-Credentials'], undefined);
+      const closed = await callCheckout({sku: 'unnecessary-promotions'}, {headers: {origin}});
+      assert.equal(closed.status, 503);
+      assert.equal(closed.headers['Access-Control-Allow-Origin'], origin);
+    }
+  }));
+});
+
+test('lookalike, arbitrary and malformed product origins receive no commerce CORS', async () => {
+  for (const origin of [
+    'https://museum.officiallypointless.com.evil.invalid', 'https://unknown.officiallypointless.com',
+    'https://www.museum.officiallypointless.com', 'https://museum.officiallypointless.com:443',
+    'https://museum.officiallypointless.com/', 'http://museum.officiallypointless.com', 'null',
+  ]) {
+    const result = await callStatusRequest({method: 'GET', headers: {origin}});
+    assert.equal(result.status, 403, origin);
+    assert.equal(result.headers['Access-Control-Allow-Origin'], undefined);
+    const preflight = await callCheckout(undefined, {method: 'OPTIONS', headers: {origin, 'access-control-request-method': 'POST'}});
+    assert.equal(preflight.status, 403, origin);
+    assert.equal(preflight.headers['Access-Control-Allow-Origin'], undefined);
+  }
+  const duplicated = await callCheckout({sku: 'unnecessary-promotions'}, {headers: {
+    Origin: 'https://museum.officiallypointless.com', origin: 'https://museum.officiallypointless.com',
+  }});
+  assert.equal(duplicated.status, 403);
+  assert.equal(duplicated.headers['Access-Control-Allow-Origin'], undefined);
+});
+
+test('commerce preflight rejects missing origins and non-commerce methods or headers', async () => {
+  for (const headers of [
+    {'access-control-request-method': 'POST'},
+    {origin: 'https://museum.officiallypointless.com', 'access-control-request-method': 'DELETE'},
+    {origin: 'https://museum.officiallypointless.com', 'access-control-request-method': 'POST', 'access-control-request-headers': 'X-Pointless-License'},
+  ]) {
+    assert.equal((await callCheckout(undefined, {method: 'OPTIONS', headers})).status, 403);
+  }
+  const result = await callStatusRequest({method: 'OPTIONS', headers: {
+    origin: 'https://museum.officiallypointless.com', 'access-control-request-method': 'GET',
+  }});
+  assert.equal(result.status, 204);
+  assert.equal(result.headers['Access-Control-Allow-Origin'], 'https://museum.officiallypointless.com');
+});
+
+test('status exposes five separately priced certificates with purchases closed by default',async()=>{
+  await withProductEnv({},async()=>{
+    const result=await callStatus();
+    assert.deepEqual(result.body.certificateProducts,certificates.map(([slug])=>({
+      catalog:{sku:'certificate-'+slug,priceUsd:19,currency:'USD',kind:'digital-certificate'},checkoutEnabled:false,
+    })));
+  });
+});
+
+test('accepted certificate checkout returns only the selected single-title product',async()=>{
+  await withProductEnv(certificateEnv,async()=>{
+    const response=await callCheckout({sku:'certificate-minister-of-unopened-tabs'},{headers:{origin:'https://promotions.officiallypointless.com'}});
+    assert.equal(response.status,200);
+    assert.deepEqual(response.body,{
+      checkoutUrl:'https://fridburg.gumroad.com/l/pointless-minister-of-unopened-tabs',
+      sku:'certificate-minister-of-unopened-tabs',priceUsd:19,currency:'USD',fulfillment:'gumroad',
+    });
+    assert.equal(response.headers['Access-Control-Allow-Origin'],'https://promotions.officiallypointless.com');
+    assert.equal((await callCheckout({sku:'certificate-secretary-of-one-more-coffee'})).status,503);
+    assert.equal((await callCheckout({sku:'certificate-arbitrary-title'})).status,404);
+    const result=await callStatus();
+    assert.equal(result.body.certificateProducts?.filter(product=>product.checkoutEnabled).length,1);
+    assert.equal(result.body.checkoutEnabled,false);
+    assert.equal(result.body.departmentCollection.checkoutEnabled,false);
+    assert(!JSON.stringify(result.body).includes('fixture-certificate-product'));
+  });
+});
+
+test('each certificate checkout requires its exact accepted product, seller and provider destination',async()=>{
+  for(const [slug,name]of certificates){
+    const env={POINTLESS_SELLER_ACCEPTED:'true',
+      [`GUMROAD_CERTIFICATE_${name}_PRODUCT_ID`]:'fixture-'+slug,
+      [`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`]:'https://fridburg.gumroad.com/l/pointless-'+slug,
+      [`POINTLESS_CERTIFICATE_${name}_ACCEPTED`]:'true',
+      [`POINTLESS_CERTIFICATE_${name}_CHECKOUT_ENABLED`]:'true',
+    };
+    await withProductEnv(env,async()=>{
+      const response=await callCheckout({sku:'certificate-'+slug});
+      assert.equal(response.status,200,slug);
+      assert.equal(response.body.checkoutUrl,'https://fridburg.gumroad.com/l/pointless-'+slug);
+    });
+    for(const setting of Object.keys(env))await withProductEnv({...env,[setting]:undefined},async()=>{
+      const result=await callCheckout({sku:'certificate-'+slug});
+      assert.equal(result.status,503,setting);
+      assert.equal(result.body.error,'checkout_not_open');
+    });
+    for(const destination of [checkoutUrl,departmentUrl,env[`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`]+'?paid=true','https://fridburg.gumroad.com.evil.invalid/l/pointless-'+slug]) {
+      await withProductEnv({...env,[`GUMROAD_CERTIFICATE_${name}_CHECKOUT_URL`]:destination},async()=>{
+        assert.equal((await callCheckout({sku:'certificate-'+slug})).status,503);
+      });
+    }
+  }
 });

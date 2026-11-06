@@ -69,7 +69,21 @@
     "site/assets/departments/unnecessary-ribbon.png",
     "site/departments/invisible-monument/index.html",
     "site/assets/departments/invisible-monument.png",
-    "site/departments/index.html"
+    "site/departments/index.html",
+    "site/assets/product-dispatch.js",
+    "api/product-sites.js",
+    "api/commerce-origins.js",
+    ".github/workflows/products.yml",
+    "site/certificates/minister-of-unopened-tabs/index.html",
+    "site/certificates/secretary-of-one-more-coffee/index.html",
+    "site/certificates/director-of-unnecessary-meetings/index.html",
+    "site/certificates/chief-of-the-snack-drawer/index.html",
+    "site/certificates/commissioner-of-replying-tomorrow/index.html",
+    "site/assets/certificates/minister-of-unopened-tabs.png",
+    "site/assets/certificates/secretary-of-one-more-coffee.png",
+    "site/assets/certificates/director-of-unnecessary-meetings.png",
+    "site/assets/certificates/chief-of-the-snack-drawer.png",
+    "site/assets/certificates/commissioner-of-replying-tomorrow.png"
   ],
   "assetSha256": {
     "site/assets/gift-kit-cover.png": "b99b3f985d325794545e81bf3488917df6ef97142f3058d87bf0761991b67fdd",
@@ -82,6 +96,11 @@
     "site/assets/departments/button.png": "7e87c2ae530b6291288d51f234afff3f171da9088286bd8aac7dc59876462ef6",
     "site/assets/departments/empty-wing.png": "65cc84382a7d897b632de88a8944f28bd2dcda6fe710526fd78880dd8c8bc6a6",
     "site/assets/departments/unnecessary-ribbon.png": "1247af743b071000e2050efaed8d35ee2be8350466ba0825450d209e1659d325",
-    "site/assets/departments/invisible-monument.png": "f6f9b84ef5f38725ded5d6cf3becbb59a949afa09c21cf0341c474499f87103a"
+    "site/assets/departments/invisible-monument.png": "f6f9b84ef5f38725ded5d6cf3becbb59a949afa09c21cf0341c474499f87103a",
+    "site/assets/certificates/minister-of-unopened-tabs.png": "95031d942d58118d17198c5bb36f373fd686f7bf7139af23b640f94d8e9bacf8",
+    "site/assets/certificates/secretary-of-one-more-coffee.png": "bc0b1fe80bcf2f25391c03f39eef34df0c328137f7d739533067634e35ff4fe0",
+    "site/assets/certificates/director-of-unnecessary-meetings.png": "b63c6b0f7c8c4f09e3d87105732d62322c09adaad43f530c2b211dd68a656a69",
+    "site/assets/certificates/chief-of-the-snack-drawer.png": "f0367366e9dca1ced6bd47e5bf8ceaa1c6dceccea1a1469abe14aafa53cfde8d",
+    "site/assets/certificates/commissioner-of-replying-tomorrow.png": "9dd2e88fda585acf62ed42290f790964ea2feb029d1f435657f9f151298c233c"
   }
 }

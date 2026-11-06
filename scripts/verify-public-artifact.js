@@ -5,7 +5,20 @@ const path = require('node:path');
 
 const requiredFiles = new Set([
   "departments/index.html",
+  "assets/certificates/minister-of-unopened-tabs.png",
+  "assets/certificates/secretary-of-one-more-coffee.png",
+  "assets/certificates/director-of-unnecessary-meetings.png",
+  "assets/certificates/chief-of-the-snack-drawer.png",
+  "assets/certificates/commissioner-of-replying-tomorrow.png",
+
+  "certificates/minister-of-unopened-tabs/index.html",
+  "certificates/secretary-of-one-more-coffee/index.html",
+  "certificates/director-of-unnecessary-meetings/index.html",
+  "certificates/chief-of-the-snack-drawer/index.html",
+  "certificates/commissioner-of-replying-tomorrow/index.html",
+
   "assets/checkout.js",
+  "assets/product-dispatch.js",
   "assets/gift-kit-cover.png",
   "contact/index.html",
   "gift-kit/index.html",
