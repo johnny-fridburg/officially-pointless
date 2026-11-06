@@ -20,6 +20,7 @@
   const PRODUCT_ORIGINS=new Set(['https://promotions.officiallypointless.com',...DEPARTMENT_SLUGS.map(slug=>'https://'+slug+'.officiallypointless.com')]);
   const closedPresentation={state:'closed',disabled:true,buttonLabel:'Checkout is not open yet',message:'Orders are not open. You have not been charged.'};
   function checkoutProduct(sku){
+    if(sku==='game-name-the-boss')return {url:'https://fridburg.gumroad.com/l/pointless-name-the-boss',kind:'paid-game'};
     if(sku===SKU||sku===DEPARTMENT_SKU)return {retired:true};
     const title=typeof sku==='string'&&sku.startsWith('certificate-')?sku.slice('certificate-'.length):null;
     if(TITLE_SLUGS.includes(title))return {url:'https://fridburg.gumroad.com/l/pointless-'+title,kind:'digital-certificate'};
@@ -40,7 +41,7 @@
     const product=checkoutProduct(sku);
     if(!product)return error;
     if(product.retired)return {...closedPresentation};
-    const products=product.kind==='digital-certificate'?status.certificateProducts:status.departmentProducts;
+    const products=product.kind==='digital-certificate'?status.certificateProducts:product.kind==='paid-game'?status.gameProducts:status.departmentProducts;
     if(!Array.isArray(products))return error;
     const matches=products.filter(entry=>isObject(entry)&&isObject(entry.catalog)&&entry.catalog.sku===sku);
     if(matches.length!==1)return error;

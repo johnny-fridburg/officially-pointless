@@ -1,0 +1,21 @@
+.effect-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:42px;align-items:start;margin:35px 0 48px}
+.effect-artwork{margin:0;min-width:0}.effect-artwork>img{display:block;width:100%;height:auto;border:1px solid var(--line)}
+.effect-artwork figcaption{font-size:12px;color:var(--muted);margin:14px 0 26px}.effect-contract{border-top:1px solid var(--line);padding-top:18px}
+.effect-offer,.effect-owner,.effect-record{border:1px solid var(--line);background:#fbf7ef;padding:27px;min-width:0}
+.effect-offer h2{font-size:30px}.effect-offer .price{margin:18px 0 26px}.effect-offer form{min-width:0}
+.effect-offer label{display:block;font-size:13px;margin:18px 0 7px}.effect-offer input:not([type=checkbox]),.effect-offer textarea{display:block;width:100%;min-width:0;padding:11px;border:1px solid var(--line);border-radius:2px;background:#fffaf1;color:var(--ink);font:inherit}
+.effect-offer textarea{resize:vertical}.effect-offer .effect-consent,.effect-owner .effect-consent{display:flex;gap:12px;align-items:flex-start;font-size:13px;line-height:1.55;margin:18px 0}
+.effect-consent input{width:18px;height:18px;flex:0 0 18px;margin:3px 0 0;accent-color:var(--ink)}
+.effect-offer .action{width:100%;margin:7px 0}.effect-offer details{border-top:1px solid var(--line);margin-top:22px;padding-top:18px}
+.effect-offer summary,.effect-removal summary{cursor:pointer;font-size:14px}.effect-offer #effect-status{font-size:13px;min-height:40px}
+.effect-downloads{border-top:1px solid var(--line);margin-top:20px;padding-top:12px}.effect-downloads .action{background:transparent;color:var(--ink)}
+.effect-owner{margin:36px 0}.effect-recorded-result{font-size:19px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.effect-moves{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0}.effect-moves .action{min-height:45px}
+.effect-removal{border-top:1px solid var(--line);margin-top:28px;padding-top:18px;max-width:700px}.effect-removal p{font-size:14px}
+.effect-existing-removal{max-width:700px;margin:35px 0}.effect-existing-removal>p{font-size:14px}.effect-existing-removal .secondary{background:transparent;color:var(--ink)}
+.effect-record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:23px;margin:28px 0}.effect-record h2{font-size:30px;overflow-wrap:anywhere}
+.effect-record h2 a{text-underline-offset:5px}.effect-credit{color:var(--muted);font-size:14px}.effect-dedication{white-space:pre-wrap;overflow-wrap:anywhere}
+.effect-record .effect-recorded-result{border-top:1px solid var(--line);margin-top:22px;padding-top:18px}.effect-record time{display:block;margin-top:16px}
+.effect-offer button:disabled,.effect-owner button:disabled{cursor:default;opacity:.55}.effect-offer input:disabled,.effect-offer textarea:disabled{opacity:.7}
+@media(max-width:850px){.effect-layout{grid-template-columns:1fr;gap:25px}.effect-artwork{max-width:680px}.effect-record-grid{grid-template-columns:1fr}}
+@media(max-width:450px){.effect-offer,.effect-owner,.effect-record{padding:20px}.effect-layout{margin-top:25px}.effect-moves{flex-direction:column}.effect-owner>.action{width:100%}}
