@@ -11,6 +11,8 @@ test('private transport sends authenticated POST, rejects redirects and caps act
   if(req.url==='/redirect'){res.writeHead(302,{Location:'/success'});res.end();return;}
   if(req.url==='/oversize'){res.end(Buffer.alloc(4*1024*1024+1));return;}
   if(req.url==='/timeout')return;
+  if(req.url==='/empty204'){res.writeHead(204);res.end();return;}
+  if(req.url==='/empty205'){res.writeHead(205);res.end();return;}
   let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{res.setHeader('Content-Type','application/json');res.end(JSON.stringify({key:req.headers['x-functions-key'],body:JSON.parse(body)}));});
  });
  await new Promise(resolve=>server.listen(0,resolve));
@@ -21,4 +23,5 @@ test('private transport sends authenticated POST, rejects redirects and caps act
  await assert.rejects(()=>instanceRequest(root+'/redirect',options),/backend_redirect/);
  await assert.rejects(()=>instanceRequest(root+'/oversize',options),/backend_response_limit/);
  await assert.rejects(()=>instanceRequest(root+'/timeout',{...options,signal:AbortSignal.timeout(20)}),/backend_timeout/);
+ for(const status of [204,205]){const empty=await instanceRequest(root+'/empty'+status,options);assert.equal(empty.status,status);assert.equal(empty.body,null);}
 });

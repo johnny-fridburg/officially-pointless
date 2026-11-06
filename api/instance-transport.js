@@ -11,8 +11,11 @@ function instanceRequest(url,options){
    const chunks=[];let bytes=0;
    response.on('data',chunk=>{bytes+=chunk.length;if(bytes>4*1024*1024){response.destroy(Error('backend_response_limit'));return;}chunks.push(chunk);});
    response.on('error',reject);
-   response.on('end',()=>resolve(new Response(Buffer.concat(chunks),{status:response.statusCode,
-    headers:{'Content-Type':response.headers['content-type']||'application/json'}})));
+   response.on('end',()=>{
+    try{resolve(new Response([204,205].includes(response.statusCode)?null:Buffer.concat(chunks),{status:response.statusCode,
+     headers:{'Content-Type':response.headers['content-type']||'application/json'}}));}
+    catch(error){reject(error);}
+   });
   });
   const abort=()=>req.destroy(Error('backend_timeout'));
   options.signal?.addEventListener('abort',abort,{once:true});
