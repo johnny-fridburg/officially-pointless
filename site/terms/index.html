@@ -38,7 +38,7 @@ main{min-width:0;overflow-wrap:anywhere}
   <a class="skip-link" href="#main-content">Skip to content</a>
 <header>
   <a class="brand" href="/">Officially Pointless<small>Fictional gifts. Entirely unnecessary occasions.</small></a>
-  <nav aria-label="Main navigation"><a href="/#products">All products</a><a href="/gift-kit/">Promotions</a><a href="/#boss-gifts">For your boss</a><a href="/departments/">Departments</a></nav>
+  <nav aria-label="Main navigation"><a href="/#products">All products</a><a href="/gift-kit/">Promotions</a><a href="/#boss-gifts">For your boss</a><a href="/departments/">Departments</a><a href="/gifts/">Public gifts</a></nav>
 </header>
 
   <main class="document" id="main-content" tabindex="-1">
@@ -48,8 +48,10 @@ main{min-width:0;overflow-wrap:anywhere}
 <p>The website displays sample images and product information. Personalization and finished downloads require the corresponding individual product purchase. Samples are for viewing; they are not a license to reproduce or resell the artwork.</p>
 <p>Each individual certificate or department costs $19 USD once and is available only when its own product page reports checkout open. Gumroad handles available payment and private download delivery. No subscription or physical shipment is offered. Review the selected product’s contents, personal-use license, hosted checkout and refund information before paying.</p>
 <p>Each department is a separate purchase. Each selected certificate title is also a separate purchase and includes one editable certificate file. A department purchase allows private printable HTML gifts/activities and one active public page in that department. Existing kit and collection buyers retain their historical purchased access; new sales are individual products. Creating a private gift does not publish anything; public publication requires an explicit choice.</p>
-<p>A public page contains the alias, title and dedication the publisher chooses. Anyone with its link can view it. The original purchase key can remove it; support handles other removal/moderation issues. Removal permits a replacement, subject to rate and capacity limits. Public hosting continues while the service operates. No perpetual hosting, official authority, real property, site-wide control, paid ranking or financial return is promised.</p>
-<p>Keep your department purchase key private. Give recipients the generated private gift file, not your key. Online gift creation needs the service; downloaded HTML gifts work offline. Gifts and activities are for personal use and gifting, not resale. Native provider gift-receiver licenses are not supported in the first department edition.</p>
+<p>A public page contains the alias, title and dedication the publisher chooses. Anyone can view it. The original purchase key can remove it; support handles other removal/moderation issues. Removal permits a replacement, subject to rate and capacity limits. Public hosting continues while the service operates. No perpetual hosting, official authority, real property, site-wide control, paid ranking or financial return is promised.</p>
+<p>Each individual purchase also permits one active received-gift page for its product in the public gift wall. For a department, this shares the same entitlement as its public department presence; remove one before publishing the other. Publish only a recipient name, chosen handle and message that your recipient agrees to show publicly. Public gifts appear in the wall, shareable pages, chosen-handle collections and on-site notices. They are readable by everyone without an account or purchase. Handles are public nicknames, not verified identities.</p>
+<p>Collection scores count different active gifted products; product scores count different active public recipient handles. Repeated gifts do not increase these scores. Removed gifts stop contributing. These boards are for friendly novelty participation, with no prize, guaranteed position or financial reward. Public names and messages must not impersonate or harass others. Contact support to report a concern or request removal.</p>
+<p>Keep your purchase key private. Give recipients the generated private gift file, not your key. Online gift creation needs the service; downloaded HTML gifts work offline. Gifts and activities are for personal use and gifting, not resale. Native provider gift-receiver licenses are not supported for online access.</p>
 <p>Previously submitted contributions are no longer publicly accessible. For a removal request or concern about an earlier contribution, contact <a href="mailto:support@officiallypointless.com">support@officiallypointless.com</a> with its old link. Do not include private information about others.</p>
 <p>Choose a joke the recipient will enjoy. Do not use a fictional certificate to mislead someone or impersonate a real authority.</p>
 <p>These terms do not remove rights that applicable law gives you. Contact support with order questions.</p>
@@ -58,7 +60,10 @@ main{min-width:0;overflow-wrap:anywhere}
   <footer>
   <span>Officially Pointless · Fictional gifts, awarded with affection.</span>
   <nav aria-label="Information"><a href="/contact/">Contact</a><a href="/privacy/">Privacy</a><a href="/terms/">Use terms</a><a href="/sales-status/">Sales and refunds</a></nav>
+  <button id="gift-notification-toggle" class="gift-notification-toggle" type="button" aria-pressed="false" hidden>Mute gift updates</button>
 </footer>
+<link rel="stylesheet" href="/assets/gifts.css">
+<aside id="gift-notification-layer" class="gift-notification-layer" aria-label="Gift updates" hidden><div id="gift-toast-stack" class="gift-toast-stack" role="status" aria-live="polite" aria-atomic="false"></div></aside>
 <script>document.querySelector('.skip-link')?.addEventListener('click', event => {
   const main = document.getElementById('main-content');
   if (!main || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -69,6 +74,7 @@ main{min-width:0;overflow-wrap:anywhere}
 });
 </script>
 <script src="/assets/product-dispatch.js" defer></script>
+<script src="/assets/gifts.js" defer></script>
 
 </body>
 </html>

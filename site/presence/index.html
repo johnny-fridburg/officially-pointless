@@ -45,7 +45,7 @@ main{min-width:0;overflow-wrap:anywhere}
 <a class="skip-link" href="#main-content">Skip to content</a>
 <header>
   <a class="brand" href="/">Officially Pointless<small>Fictional gifts. Entirely unnecessary occasions.</small></a>
-  <nav aria-label="Main navigation"><a href="/#products">All products</a><a href="/gift-kit/">Promotions</a><a href="/#boss-gifts">For your boss</a><a href="/departments/">Departments</a></nav>
+  <nav aria-label="Main navigation"><a href="/#products">All products</a><a href="/gift-kit/">Promotions</a><a href="/#boss-gifts">For your boss</a><a href="/departments/">Departments</a><a href="/gifts/">Public gifts</a></nav>
 </header>
 <main id="main-content" tabindex="-1">
 <p class="eyebrow">A purchased public dedication</p><h1 id="presence-heading">An entirely unnecessary distinction.</h1>
@@ -57,7 +57,10 @@ main{min-width:0;overflow-wrap:anywhere}
 </main><footer>
   <span>Officially Pointless · Fictional gifts, awarded with affection.</span>
   <nav aria-label="Information"><a href="/contact/">Contact</a><a href="/privacy/">Privacy</a><a href="/terms/">Use terms</a><a href="/sales-status/">Sales and refunds</a></nav>
+  <button id="gift-notification-toggle" class="gift-notification-toggle" type="button" aria-pressed="false" hidden>Mute gift updates</button>
 </footer>
+<link rel="stylesheet" href="/assets/gifts.css">
+<aside id="gift-notification-layer" class="gift-notification-layer" aria-label="Gift updates" hidden><div id="gift-toast-stack" class="gift-toast-stack" role="status" aria-live="polite" aria-atomic="false"></div></aside>
 <script>document.querySelector('.skip-link')?.addEventListener('click', event => {
   const main = document.getElementById('main-content');
   if (!main || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -68,4 +71,5 @@ main{min-width:0;overflow-wrap:anywhere}
 });
 </script>
 <script src="/assets/product-dispatch.js" defer></script>
+<script src="/assets/gifts.js" defer></script>
 <script src="/assets/departments.js" defer></script></body></html>

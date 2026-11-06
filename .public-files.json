@@ -83,7 +83,19 @@
     "site/assets/certificates/secretary-of-one-more-coffee.png",
     "site/assets/certificates/director-of-unnecessary-meetings.png",
     "site/assets/certificates/chief-of-the-snack-drawer.png",
-    "site/assets/certificates/commissioner-of-replying-tomorrow.png"
+    "site/assets/certificates/commissioner-of-replying-tomorrow.png",
+    "api/gift-products.json",
+    "api/paid-state.js",
+    "api/gift-service.js",
+    "api/gifts/index.js",
+    "api/gifts/function.json",
+    "api/gifts.test.js",
+    "site/assets/gifts.js",
+    "site/assets/gifts.css",
+    "site/gifts/index.html",
+    "site/gifts/create/index.html",
+    "site/gifts/view/index.html",
+    "site/people/index.html"
   ],
   "assetSha256": {
     "site/assets/gift-kit-cover.png": "b99b3f985d325794545e81bf3488917df6ef97142f3058d87bf0761991b67fdd",

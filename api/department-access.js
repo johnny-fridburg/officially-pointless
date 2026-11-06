@@ -2,6 +2,8 @@
 const {createHash}=require('node:crypto');
 const {createBlobStore}=require('./community-store');
 const {PRODUCT_SITES}=require('./product-sites');
+const giftProducts=Object.freeze(require('./gift-products.json').map(product=>Object.freeze(product)));
+const permalinkProducts=new Map(giftProducts.map(product=>[product.permalink,product]));
 const PRODUCT_SLUG='department-collection';
 const departmentSites=PRODUCT_SITES.filter(site=>site.sku.startsWith('department-'));
 const permalinkDepartments=new Map(departmentSites.map(site=>['pointless-'+site.sku.slice('department-'.length),site.sku.slice('department-'.length)]));
@@ -22,9 +24,10 @@ async function boundedJson(response){
 }
 function createLicenseVerifier({productId,permalink=PRODUCT_SLUG,request=fetch}={}){
   const department=permalinkDepartments.get(permalink);
+  const product=permalinkProducts.get(permalink);
   return async license=>{
     if(!validLicense(license))throw new PaymentError('payment_required');
-    if(!validProductId(productId)||permalink!==PRODUCT_SLUG&&!department)throw new PaymentError('payment_unavailable');
+    if(!validProductId(productId)||permalink!==PRODUCT_SLUG&&!product)throw new PaymentError('payment_unavailable');
     let data;
     try{
       const response=await request('https://api.gumroad.com/v2/licenses/verify',{
@@ -48,7 +51,25 @@ function createLicenseVerifier({productId,permalink=PRODUCT_SLUG,request=fetch}=
       throw new PaymentError('payment_required');
     }
     return {owner:digest('gumroad-department:'+productId+':'+p.sale_id),credentialHash:credentialHash(license),
-      ...(department&&{departments:[department]})};
+      ...(department&&{departments:[department]}),...(product?.kind==='digital-certificate'&&{products:[product.sku]})};
+  };
+}
+function createProductLicenseVerifier({products=[],request=fetch}={}){
+  const valid=Array.isArray(products)&&products.length<=16&&products.every(product=>product&&validProductId(product.productId)&&
+    (product.permalink===PRODUCT_SLUG||permalinkProducts.has(product.permalink)));
+  const verifiers=valid?products.map(product=>({permalink:product.permalink,verify:createLicenseVerifier({...product,request})})):[];
+  return async(license,productSku)=>{
+    if(!validLicense(license))throw new PaymentError('payment_required');
+    if(!valid||!verifiers.length)throw new PaymentError('payment_unavailable');
+    const requested=productSku===undefined?null:giftProducts.find(product=>product.sku===productSku);
+    if(productSku!==undefined&&!requested)throw new PaymentError('payment_required');
+    const candidates=verifiers.filter(product=>!requested||product.permalink===requested.permalink||
+      product.permalink===PRODUCT_SLUG&&requested.kind==='online-department');
+    if(!candidates.length)throw new PaymentError('payment_required');
+    const results=await Promise.allSettled(candidates.map(product=>product.verify(license)));
+    const verified=results.find(result=>result.status==='fulfilled');if(verified)return verified.value;
+    if(results.some(result=>result.reason?.code!=='payment_required'))throw new PaymentError('payment_unavailable');
+    throw new PaymentError('payment_required');
   };
 }
 function createDepartmentLicenseVerifier({products=[],request=fetch}={}){
@@ -75,6 +96,7 @@ function departmentConfig(env=process.env){
   const store=createBlobStore(env.POINTLESS_DEPARTMENTS_BLOB_URL,{request:(url,options)=>fetch(url,{...options,redirect:'error'})});
   const productId=env.GUMROAD_DEPARTMENT_PRODUCT_ID;
   const storageReady=Boolean(store)&&new URL(env.POINTLESS_DEPARTMENTS_BLOB_URL).pathname==='/departments/state.json'&&
+    !new URL(env.POINTLESS_DEPARTMENTS_BLOB_URL).port&&Boolean(new URL(env.POINTLESS_DEPARTMENTS_BLOB_URL).searchParams.get('sig'))&&
     blobIdentity(env.POINTLESS_DEPARTMENTS_BLOB_URL)!==blobIdentity(env.POINTLESS_COMMUNITY_BLOB_URL);
   const infrastructureReady=env.POINTLESS_DEPARTMENTS_ENABLED==='true'&&env.POINTLESS_SELLER_ACCEPTED==='true'&&storageReady;
   const adminToken=env.POINTLESS_DEPARTMENTS_ADMIN_TOKEN||null;
@@ -93,4 +115,15 @@ function departmentConfig(env=process.env){
   return {enabled:collectionEnabled||departmentProducts.some(product=>product.enabled),collectionEnabled,
     removalEnabled:storageReady,store,productId,adminToken,products,departmentProducts};
 }
-module.exports={createLicenseVerifier,createDepartmentLicenseVerifier,departmentConfig,credentialHash,validLicense,PaymentError};
+function publicGiftConfig(env=process.env){
+  const departments=departmentConfig(env),store=departments.removalEnabled?departments.store:null;
+  const adminToken=departments.adminToken,ready=Boolean(env.POINTLESS_SELLER_ACCEPTED==='true'&&typeof adminToken==='string'&&adminToken.length>=32);
+  const certificates=giftProducts.filter(product=>product.kind==='digital-certificate').flatMap(product=>{
+    const suffix=product.sku.slice('certificate-'.length).toUpperCase().replaceAll('-','_');
+    const productId=env['GUMROAD_CERTIFICATE_'+suffix+'_PRODUCT_ID'];
+    return ready&&env['POINTLESS_CERTIFICATE_'+suffix+'_ACCEPTED']==='true'&&validProductId(productId)?[{productId,permalink:product.permalink}]:[];
+  });
+  const products=[...departments.products,...certificates];
+  return {enabled:Boolean(store&&ready&&products.length&&env.POINTLESS_PUBLIC_GIFTS_ENABLED==='true'),store,adminToken,products};
+}
+module.exports={createLicenseVerifier,createDepartmentLicenseVerifier,createProductLicenseVerifier,departmentConfig,publicGiftConfig,credentialHash,validLicense,PaymentError};

@@ -90,7 +90,19 @@ const reviewedPaths = [
   "site/assets/certificates/secretary-of-one-more-coffee.png",
   "site/assets/certificates/director-of-unnecessary-meetings.png",
   "site/assets/certificates/chief-of-the-snack-drawer.png",
-  "site/assets/certificates/commissioner-of-replying-tomorrow.png"
+  "site/assets/certificates/commissioner-of-replying-tomorrow.png",
+  "api/gift-products.json",
+  "api/paid-state.js",
+  "api/gift-service.js",
+  "api/gifts/index.js",
+  "api/gifts/function.json",
+  "api/gifts.test.js",
+  "site/assets/gifts.js",
+  "site/assets/gifts.css",
+  "site/gifts/index.html",
+  "site/gifts/create/index.html",
+  "site/gifts/view/index.html",
+  "site/people/index.html"
 ];
 const allowedPaths = new Set(reviewedPaths);
 const approvedAssetSha256 = {
