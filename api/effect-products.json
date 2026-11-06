@@ -130,5 +130,63 @@
     "durationSeconds": 0,
     "outcome": "One named boss encounter, one finite three-turn challenge and a public outcome credited to your chosen name.",
     "artifact": "Boss encounter record"
+  },
+  {
+    "sku": "honor-patron-of-the-next-nothing",
+    "slug": "patron-of-the-next-nothing",
+    "name": "Patron of the Next Nothing",
+    "priceUsd": 19,
+    "currency": "USD",
+    "permalink": "pointless-patron-of-the-next-nothing",
+    "envSuffix": "HONOR_NEXT_NOTHING",
+    "action": "ceremony",
+    "durationSeconds": 0,
+    "outcome": "One named patron credit for your chosen ceremony and one purchased activation, with that instance's completed ceremony recorded.",
+    "artifact": "Patron ceremony"
+  },
+  {
+    "sku": "honor-the-bench-nobody-needed",
+    "slug": "the-bench-nobody-needed",
+    "name": "The Bench Nobody Needed",
+    "priceUsd": 19,
+    "currency": "USD",
+    "permalink": "pointless-the-bench-nobody-needed",
+    "envSuffix": "HONOR_BENCH",
+    "action": "none",
+    "durationSeconds": 0,
+    "outcome": "One finished fictional digital museum bench plaque with recipient, plaque title and dedication. No real bench or land rights.",
+    "artifact": "Fictional bench plaque"
+  },
+  {
+    "sku": "honor-the-honorary-forecast",
+    "slug": "the-honorary-forecast",
+    "name": "The Honorary Forecast",
+    "priceUsd": 19,
+    "currency": "USD",
+    "permalink": "pointless-the-honorary-forecast",
+    "envSuffix": "HONOR_FORECAST",
+    "action": "none",
+    "durationSeconds": 0,
+    "fixedForecast": "Outlook: a ceremonial nod, followed by absolutely ordinary conditions.",
+    "outcome": "One finished fictional bulletin credited to your chosen forecaster for a named occasion, with a fixed harmless ceremonial outlook.",
+    "artifact": "Fictional forecast bulletin"
+  },
+  {
+    "sku": "honor-commissioner-of-a-tiny-rule",
+    "slug": "commissioner-of-a-tiny-rule",
+    "name": "Commissioner of a Tiny Rule",
+    "priceUsd": 19,
+    "currency": "USD",
+    "permalink": "pointless-commissioner-of-a-tiny-rule",
+    "envSuffix": "HONOR_TINY_RULE",
+    "action": "ceremony",
+    "durationSeconds": 0,
+    "titleChoices": [
+      "A ceremonial nod is required",
+      "The opening must be announced twice",
+      "A tiny pause precedes the opening"
+    ],
+    "outcome": "One fixed rule selected from three ceremonial phrases and one purchased opening activation, recorded for its named commissioner.",
+    "artifact": "Ceremonial rule opening"
   }
 ]

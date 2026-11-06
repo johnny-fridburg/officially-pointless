@@ -118,7 +118,16 @@ const reviewedPaths = [
   "site/assets/effects/name-the-boss.png",
   "site/games/name-the-boss/index.html",
   "site/effects/index.html",
-  "site/effects/view/index.html"
+  "site/effects/view/index.html",
+  "site/honors/index.html",
+  "site/honors/patron-of-the-next-nothing/index.html",
+  "site/honors/the-bench-nobody-needed/index.html",
+  "site/honors/the-honorary-forecast/index.html",
+  "site/honors/commissioner-of-a-tiny-rule/index.html",
+  "site/assets/effects/patron-of-the-next-nothing.png",
+  "site/assets/effects/the-bench-nobody-needed.png",
+  "site/assets/effects/the-honorary-forecast.png",
+  "site/assets/effects/commissioner-of-a-tiny-rule.png"
 ];
 const allowedPaths = new Set(reviewedPaths);
 const approvedAssetSha256 = {
@@ -138,7 +147,11 @@ const approvedAssetSha256 = {
   "site/assets/certificates/director-of-unnecessary-meetings.png": "b63c6b0f7c8c4f09e3d87105732d62322c09adaad43f530c2b211dd68a656a69",
   "site/assets/certificates/chief-of-the-snack-drawer.png": "f0367366e9dca1ced6bd47e5bf8ceaa1c6dceccea1a1469abe14aafa53cfde8d",
   "site/assets/certificates/commissioner-of-replying-tomorrow.png": "9dd2e88fda585acf62ed42290f790964ea2feb029d1f435657f9f151298c233c",
-  "site/assets/effects/name-the-boss.png": "60b30ba326489ce766d977a5bf7b6f017077b8328c8868fe9669d8f9c34d111e"
+  "site/assets/effects/name-the-boss.png": "60b30ba326489ce766d977a5bf7b6f017077b8328c8868fe9669d8f9c34d111e",
+  "site/assets/effects/patron-of-the-next-nothing.png": "ea3fef7d51be5b75b9ea8bf3f764374a92fb8b71c6c9ab623ab4a06d62e2708f",
+  "site/assets/effects/the-bench-nobody-needed.png": "f25ce302890fc4167b122a7f4a1f0dbc469f50b3c838eacc0f5f91094287ecfd",
+  "site/assets/effects/the-honorary-forecast.png": "6c6b7f9e8b58614150f9e527c915ed2982e545a802c08197405210b9098f7572",
+  "site/assets/effects/commissioner-of-a-tiny-rule.png": "1b0713f678ece57600ce093d8afe16e45eb1c9d3db0d2d5ddafb0f0e29977da6"
 };
 const shaPattern = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
 const utf8 = new TextDecoder('utf-8', { fatal: true });

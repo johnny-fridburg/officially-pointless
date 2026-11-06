@@ -16,11 +16,14 @@
 
   const DEPARTMENT_SKU='department-collection';
   const DEPARTMENT_SLUGS=Object.freeze(['make-it-worse','silence','loading','last-word','museum','golden-error','button','empty-wing','unnecessary-ribbon','invisible-monument']);
+  const HONOR_SLUGS=Object.freeze(['patron-of-the-next-nothing','the-bench-nobody-needed','the-honorary-forecast','commissioner-of-a-tiny-rule']);
   const COMMERCE_ORIGIN='https://officiallypointless.com';
   const PRODUCT_ORIGINS=new Set(['https://promotions.officiallypointless.com',...DEPARTMENT_SLUGS.map(slug=>'https://'+slug+'.officiallypointless.com')]);
   const closedPresentation={state:'closed',disabled:true,buttonLabel:'Checkout is not open yet',message:'Orders are not open. You have not been charged.'};
   function checkoutProduct(sku){
     if(sku==='game-name-the-boss')return {url:'https://fridburg.gumroad.com/l/pointless-name-the-boss',kind:'paid-game'};
+    const honorSlug=typeof sku==='string'&&sku.startsWith('honor-')?sku.slice('honor-'.length):null;
+    if(HONOR_SLUGS.includes(honorSlug))return {url:'https://fridburg.gumroad.com/l/pointless-'+honorSlug,kind:'public-honor'};
     if(sku===SKU||sku===DEPARTMENT_SKU)return {retired:true};
     const title=typeof sku==='string'&&sku.startsWith('certificate-')?sku.slice('certificate-'.length):null;
     if(TITLE_SLUGS.includes(title))return {url:'https://fridburg.gumroad.com/l/pointless-'+title,kind:'digital-certificate'};
@@ -41,7 +44,7 @@
     const product=checkoutProduct(sku);
     if(!product)return error;
     if(product.retired)return {...closedPresentation};
-    const products=product.kind==='digital-certificate'?status.certificateProducts:product.kind==='paid-game'?status.gameProducts:status.departmentProducts;
+    const products=product.kind==='digital-certificate'?status.certificateProducts:product.kind==='paid-game'?status.gameProducts:product.kind==='public-honor'?status.honorProducts:status.departmentProducts;
     if(!Array.isArray(products))return error;
     const matches=products.filter(entry=>isObject(entry)&&isObject(entry.catalog)&&entry.catalog.sku===sku);
     if(matches.length!==1)return error;
@@ -93,7 +96,7 @@
       }
       if (availability) {
         availability.textContent = {
-          ready: checkoutProduct(sku)?.kind==='digital-certificate'?'The $19 personalized certificate is available through Gumroad.':'The $19 individual department purchase is available through Gumroad.',
+          ready: checkoutProduct(sku)?.kind==='digital-certificate'?'The $19 personalized certificate is available through Gumroad.':checkoutProduct(sku)?.kind==='public-honor'?'The $19 finished prestige occasion is available through Gumroad.':'The $19 individual department purchase is available through Gumroad.',
           closed: 'Purchases are not open. You have not been charged.',
           error: 'Checkout availability could not be checked. You have not been charged.'
         }[presentation.state];

@@ -27,6 +27,7 @@ function getCommerceConfig(env = process.env) {
     departmentCollection:{catalog:departmentCatalog,checkoutEnabled:false,checkoutUrl:departmentUrl},
     departmentProducts:effects.products.filter(p=>p.sku.startsWith('department-')).map(({sku,purchaseEnabled,checkoutUrl})=>({catalog:Object.freeze({sku,priceUsd:19,currency:'USD',kind:'online-department'}),checkoutEnabled:purchaseEnabled,checkoutUrl})),
     gameProducts:effects.products.filter(p=>p.sku.startsWith('game-')).map(({sku,purchaseEnabled,checkoutUrl})=>({catalog:Object.freeze({sku,priceUsd:19,currency:'USD',kind:'paid-game'}),checkoutEnabled:purchaseEnabled,checkoutUrl})),
+    honorProducts:effects.products.filter(p=>p.sku.startsWith('honor-')).map(({sku,purchaseEnabled,checkoutUrl})=>({catalog:Object.freeze({sku,priceUsd:19,currency:'USD',kind:'public-honor'}),checkoutEnabled:purchaseEnabled,checkoutUrl})),
     certificateProducts:certificateCatalog.map(catalog=>{
       const slug=catalog.sku.slice('certificate-'.length),name=slug.toUpperCase().replaceAll('-','_');
       const productId=env['GUMROAD_CERTIFICATE_'+name+'_PRODUCT_ID'];

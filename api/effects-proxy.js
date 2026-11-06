@@ -7,17 +7,17 @@ const exact=(v,keys)=>object(v)&&Object.keys(v).length===keys.length&&Object.key
 const id=v=>typeof v==='string'&&/^[a-f0-9]{24}$/.test(v);
 const text=(v,max,required=false)=>typeof v==='string'&&v.length<=max&&!/[\x00-\x1f\x7f]/.test(v)&&(!required||Boolean(v.trim()));
 const license=v=>typeof v==='string'&&/^[A-Za-z0-9-]{16,128}$/.test(v);
-const errorCodes=new Set(['invalid_id','invalid_title','invalid_text','unsupported_characters','public_consent_required','ceremony_already_started','ceremony_not_started','ceremony_in_progress','effect_completed','request_conflict','invalid_request','invalid_preview','invalid_name','unsupported_name_characters','unknown_product','payment_required','payment_unavailable','effect_unavailable','effect_not_found','effect_removed','purchase_already_assigned','invalid_move','action_complete','timer_not_ready','retry_changed','effect_busy','product_not_open','not_your_effect','consent_required']);
+const errorCodes=new Set(['invalid_id','invalid_title','invalid_rule_title','invalid_text','unsupported_characters','public_consent_required','ceremony_already_started','ceremony_not_started','ceremony_in_progress','effect_completed','request_conflict','invalid_request','invalid_preview','invalid_name','unsupported_name_characters','unknown_product','payment_required','payment_unavailable','effect_unavailable','effect_not_found','effect_removed','purchase_already_assigned','invalid_move','action_complete','timer_not_ready','retry_changed','effect_busy','product_not_open','not_your_effect','consent_required']);
 const effectKeys=['id','sku','name','title','text','createdAt','completed','result','actionsRemaining'];
 function validEffect(value){
  const product=products.find(p=>p.sku===value?.sku),limit=product?.action==='boss'?3:product?.action==='none'?0:1;
- return exact(value,effectKeys)&&id(value.id)&&Boolean(product)&&text(value.name,60,true)&&text(value.title,70,true)&&text(value.text,240)&&Number.isSafeInteger(value.createdAt)&&value.createdAt>0&&typeof value.completed==='boolean'&&text(value.result,500,true)&&Number.isSafeInteger(value.actionsRemaining)&&value.actionsRemaining>=0&&value.actionsRemaining<=limit&&value.completed===(value.actionsRemaining===0);
+ return exact(value,effectKeys)&&id(value.id)&&Boolean(product)&&text(value.name,60,true)&&text(value.title,70,true)&&(!product.titleChoices||product.titleChoices.includes(value.title))&&text(value.text,240)&&Number.isSafeInteger(value.createdAt)&&value.createdAt>0&&typeof value.completed==='boolean'&&text(value.result,500,true)&&(!product.fixedForecast||value.result===product.fixedForecast)&&Number.isSafeInteger(value.actionsRemaining)&&value.actionsRemaining>=0&&value.actionsRemaining<=limit&&value.completed===(value.actionsRemaining===0);
 }
 
 function effectConfig(env=process.env){
  const backend=backendConfig(env);
  const configured=products.map(product=>{
-  const suffix=product.sku.toUpperCase().replaceAll('-','_'),productId=env['GUMROAD_EFFECT_'+suffix+'_PRODUCT_ID'],checkoutUrl='https://fridburg.gumroad.com/l/'+product.permalink;
+  const suffix=product.envSuffix||product.sku.toUpperCase().replaceAll('-','_'),productId=env['GUMROAD_EFFECT_'+suffix+'_PRODUCT_ID'],checkoutUrl='https://fridburg.gumroad.com/l/'+product.permalink;
   const participationEnabled=Boolean(backend&&env.POINTLESS_EFFECTS_ENABLED==='true'&&env.POINTLESS_SELLER_ACCEPTED==='true'&&env['POINTLESS_EFFECT_'+suffix+'_ACCEPTED']==='true'&&typeof productId==='string'&&productId.length>0&&productId.length<=128&&!/[\s\x00-\x1f\x7f]/.test(productId));
   const purchaseEnabled=Boolean(participationEnabled&&env['POINTLESS_EFFECT_'+suffix+'_CHECKOUT_ENABLED']==='true'&&env['GUMROAD_EFFECT_'+suffix+'_CHECKOUT_URL']===checkoutUrl);
   return {sku:product.sku,participationEnabled,purchaseEnabled,checkoutUrl,productId};
@@ -46,7 +46,7 @@ function createEffectsProxy({env=process.env,request=(url,options)=>require('./i
    const b=commerceBody(req);
    if(!object(b)||Buffer.byteLength(JSON.stringify(b))>4096){respond(400,{error:'invalid_request'});return;}
    action=b.action;
-   const valid=action==='preview'?exact(b,['action','sku','name','title','text','consent'])&&products.some(p=>p.sku===b.sku)&&text(b.name,60,true)&&text(b.title,70)&&text(b.text,240)&&b.consent===true:
+   const valid=action==='preview'?exact(b,['action','sku','name','title','text','consent'])&&products.some(p=>p.sku===b.sku&&(!p.titleChoices||typeof b.title==='string'&&p.titleChoices.includes(b.title.trim())))&&text(b.name,60,true)&&text(b.title,70,true)&&text(b.text,240)&&b.consent===true:
     action==='deliver'?exact(b,['action','instance','license'])&&text(b.instance,4096,true)&&license(b.license):
     action==='download'||action==='remove'?exact(b,['action','id','license'])&&id(b.id)&&license(b.license):
     action==='play'&&exact(b,['action','id','license','move','requestId'])&&id(b.id)&&license(b.license)&&['attack','defend','boast','activate','start','complete'].includes(b.move)&&typeof b.requestId==='string'&&/^(?:[a-f0-9]{32}|[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12})$/.test(b.requestId);
